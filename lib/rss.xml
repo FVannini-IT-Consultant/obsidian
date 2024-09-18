@@ -1,0 +1,1784 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Devops]]></title><description><![CDATA[Obsidian digital garden]]></description><link>http://github.com/dylang/node-rss</link><image><url>lib\media\favicon.png</url><title>Devops</title><link></link></image><generator>Webpage HTML Export plugin for Obsidian</generator><lastBuildDate>Wed, 18 Sep 2024 10:02:17 GMT</lastBuildDate><atom:link href="lib\rss.xml" rel="self" type="application/rss+xml"/><pubDate>Wed, 18 Sep 2024 10:02:15 GMT</pubDate><ttl>60</ttl><dc:creator></dc:creator><item><title><![CDATA[API Accessing REST]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-api/" target="_blank">https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-api/</a><br>kubectl proxy&nbsp;- Opens proxy port to API server<br>Establish a proxy connection<br>
+kubectl proxy --port=8080 &amp;<br>Query directly the API<br>
+curl localhost:8001/version<br>curl localhost:8001/api/v1/namespaces/default/secrets | jq -j '.items[].data.password' | base64 -d<br>use /api - for core API groups, such as retrieving Pods, Nodes, etc. /apis for other API groups, such as apps, batch, extensions, etc.<br>curl localhost:8001/api/v1/namespaces/default/pods<br>
+curl localhost:8001/apis/apps/v1/namespaces/default/deployments<br><br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_token/" target="_blank">https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_token/</a><br>
+kubectl create token myapp<br>Hence<br>
+curl https://kubernetes.default/api/v1/namespaces/restricted/secrets -H "Authorization: Bearer $(cat /&lt;token path&gt;)" -k<br>
+See <a data-href="Service Accounts" href="cks\cluster-setup-and-hardening\service-accounts.html" class="internal-link" target="_self" rel="noopener">Service Accounts</a><br>-k for insecure connection<br>
+-H specifies HTTP Header<br><br>kubectl port-forward&nbsp;- Opens port to target deployment and pods<br>Listen on port 8888 locally, forwarding to 5000 in the pod<br>
+kubectl port-forward pod/mypod 8888:5000<br>Deployment<br>
+kubectl port-forward deployments/nginx 8005:80<br><br><br>curl https://localhost:6443 -k \
+--key /etc/kubernetes/pki/apiserver-kubelet-client.key \
+--cert /etc/kubernetes/pki/apiserver-kubelet-client.crt \
+--cacert /etc/kubernetes/pki/ca.crt
+Copy<br><br>k config view use --raw to view certs<br>apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://kubernetes.docker.internal:6443
+  name: docker-desktop
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://192.168.64.40:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: docker-desktop
+    user: docker-desktop
+  name: docker-desktop
+- context:
+    cluster: kubernetes
+    namespace: metadata-access
+    user: kubernetes-admin
+  name: kubernetes-admin@kubernetes
+current-context: kubernetes-admin@kubernetes
+kind: Config
+preferences: {}
+users:
+- name: docker-desktop
+  user:
+    client-certificate-data: DATA+OMITTED
+    client-key-data: DATA+OMITTED
+- name: kubernetes-admin
+  user:
+    client-certificate-data: DATA+OMITTED
+    client-key-data: DATA+OMITTED
+Copy<br>Then create files for ca, crt and key by looking at ~/.kube/config<br>For each file echo &lt;base64encoded&gt; | base64 -d &gt; &lt;filename&gt;<br>
+e.g. echo LS0tLS1CRUdJTiBDRVJUS... | base64-d &gt; ca<br>curl https://192.168.64.40:6443 on its own cannot establish a connection<br>curl: (60) SSL certificate problem: unable to get local issuer certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+Copy<br>curl https://192.168.64.40:6443 --cacert ca Already trusting the CA yields a different result although forbidden<br>{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {},
+  "status": "Failure",
+  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {},
+  "code": 403
+}
+Copy<br>This would allow to trust and authenticate<br>
+curl https://192.168.64.40:6443 --cacert ca --cert crt --key key<br>{
+  "paths": [
+    "/.well-known/openid-configuration",
+    "/api",
+    "/api/v1",
+    "/apis",
+    "/apis/"
+    ...
+Copy<br><br>The config cannot be used because the certificate is valid only for internal IP addresses. We can still connect using the names specified in the certificate simply by adding them in /etc/hosts on the client.<br>The first thing is to change the service for the kube-api server from ClusterIP to NodePort<br>On the controlplane in fact<br>
+openssl x509 -in /etc/kubernetes/pki/apiserver.crt --noout --text <br>...
+DNS:cks-master, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, IP Address:10.96.0.1, IP Address:192.168.64.40
+...
+Copy<br>On the client the /etc/hosts<br># This file was automatically generated by WSL. To stop automatic generation of this file, add the following entry to /etc/wsl.conf:
+# [network]
+# generateHosts = false
+127.0.0.1       localhost
+127.0.1.1       Poseidon.       Poseidon
+192.168.64.40   cks-master
+Copy<br>and the kube config file<br>...
+ server: https://cks-master:6443
+...
+Copy<br>we can then<br>
+kubectl --kubeconfig remote-kubeconfig get po]]></description><link>cks\cluster-setup-and-hardening\api-accessing-rest.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/API Accessing REST.md</guid><pubDate>Tue, 03 Sep 2024 07:12:25 GMT</pubDate></item><item><title><![CDATA[API Restrict Access]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/security/controlling-access/" target="_blank">https://kubernetes.io/docs/concepts/security/controlling-access/</a><br><br>From a controlplane<br>
+curl https://localhost:6443 -k<br>{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {},
+  "status": "Failure",
+  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {},
+  "code": 403
+}
+Copy<br>it should not respond!<br>add<br>
+--anonymous-auth=false to kube-apiserver.yaml<br>
+which yields<br>{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {},
+  "status": "Failure",
+  "message": "Unauthorized",
+  "reason": "Unauthorized",
+  "code": 401
+}
+Copy<br><br>This has now been removed since 1.20<br>--insecure-port<br>
+<br>If set to 0 it's disabled
+<br>Otherwise it's enabled and bypasses authentication and authorisation!! Only use for debug
+<br>--insecure-port=8080<br>curl http://localhost:8080 HTTP on 8080<br><br>Enabled by default<br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction" target="_blank">https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction</a><br>This admission controller limits the&nbsp;Node&nbsp;and&nbsp;Pod&nbsp;objects a kubelet can modify<br>On a node for example even though we can use the kubelet kubeconfig file to interact with the Kube Api<br>
+kubectl --kubeconfig=/etc/kubernetes/kubelet.conf  get po<br>We can't change for example another node's label<br>kubectl --kubeconfig=/etc/kubernetes/kubelet.conf label node cks-worker2 test=test
+
+Error from server (Forbidden): nodes "cks-worker2" is forbidden: node "cks-worker1" is not allowed to modify node "cks-worker2"
+Copy<br><br>To establish a minimum version of TLS and a suite of ciphers<br>The arguments and the values are not the same<br>etcd.yaml<br>
+<a rel="noopener" class="external-link" href="https://etcd.io/docs/v3.5/op-guide/security/" target="_blank">https://etcd.io/docs/v3.5/op-guide/security/</a><br>
+<a rel="noopener" class="external-link" href="https://etcd.io/docs/v3.5/op-guide/configuration/" target="_blank">https://etcd.io/docs/v3.5/op-guide/configuration/</a><br>- --cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+- --tls-min-version=TLS1.2
+Copy<br>kube-apiserver.yaml<br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/" target="_blank">https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/</a><br>- --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+- --tls-min-version=VersionTLS12
+Copy]]></description><link>cks\cluster-setup-and-hardening\api-restrict-access.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/API Restrict Access.md</guid><pubDate>Thu, 05 Sep 2024 07:58:57 GMT</pubDate></item><item><title><![CDATA[Certificates]]></title><description><![CDATA[ 
+ <br><br>Create a key<br>openssl genrsa -out /root/60099.key 2048
+Copy<br>Create a CSR for user 60099@internal.users<br>openssl req -new -key /root/60099.key -out /root/60099.csr -subj "/CN=60099@internal.users"
+Copy<br><br>openssl x509 -req -in 60099.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out /root/60099.crt -days 5
+00
+Copy<br><br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/#normal-user" target="_blank">https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/#normal-user</a><br>cat 60099.csr | base64 -w 0 or cat 60099.csr | base64 | tr -d "\n"<br>Then send to API<br>cat &lt;&lt;EOF | kubectl apply -f -
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: 60099@internal.users
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1pEQ0NBVXdDQVFBd0h6RWRNQnNHQTFVRUF3d1VOakF3T1RsQWFXNTBaWEp1WVd3dWRYTmxjbk13Z2dFaQpNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUMxTi9PWmlRTlNCeXJCdDFVVXk2bmppRms1CnBJZ2lLRFVPNTM1dWd6T1pZWFQ2VVpaV2c4bnN0U21MRDRFeDRKeHJqQXgxeExxV0Z0TjgrM1B2Q3JtR0xXcmQKRUZodkc5aU1xbjVRQ1RpNHJBaTFTdU9zN3BkRVRKMHUzSW1HTktmOWtsWGZLSDdrMEZ0NDFjK2FHTnB4dkJ5LwpmMEkwSnQ3SU1NLzloZlRCRmMrTEtkNHF0ZkJhc3RFZ2FkcTFsYnorK0J1VDFOVkdvTHAweXgzWEZUMUxJSWNFCld6dVU5QjBvdEpRay9WcGtGcUlrVFhla282UGZTTjFkUWJpNXQyUGFsNHJPM0p4WGdCV1VzT1V2R0xnbVV5d2sKNzd0UFJPZXFQcWZiL05aWGwyVWpPQXNnaHZPdW8zN2ZSUWw3UzBycWFSb1g1ZysxRTdwNlpzT0cySFBiQWdNQgpBQUdnQURBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQVVZdjdNZlcwM0trall6S2JqdEJodDEwWDU2OWNMeXJnCkNIZ3NGVngyMDdVdjZUNFlHRm9uZmZSeW01TWUrYmsrdnQ0ZWQ4M0xuMHRjbkxNY0lOYUdkUXVjREdPaFhOaW8KelREZURDendJd1JTM25CSCtsZjc2SHlSZng4SHdwN0V4Uk94V2tOT3pGREVUTjY0bmtkclpYY2c2UHBCZjdJNApxODhPaFFLdVdjdHVTeGErQUhLQXZmZnJOaEFxdUVSa1dtdGQzS2xyTkZiUEtyMmc2Y2pvazcwSERHTWRsdDIyCllaNzlQZXJzWVg2TWhvcXVTQXJGZXQ5VmxoekdEdnFkQnY3Q2g4cTRibjRvcUZoY1ZGQVRXTFppVE80ZEZkQlIKdFNwVW0yQTYrekZwcEtzS0lrT2FLeVIrNCt2aFFFSG5qNkJzT1FzeUN4bW5vVS9HNUk1WDd3PT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUgUkVRVUVTVC0tLS0tCg==
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 86400  # one day
+  usages:
+  - client auth
+EOF
+Copy<br>Verify the request is in pending state<br>k get certificatesigningrequests.certificates.k8s.io 
+NAME                   AGE   SIGNERNAME                                    REQUESTOR                  REQUESTEDDURATION   CONDITION
+60099@internal.users   7s    kubernetes.io/kube-apiserver-client           kubernetes-admin           24h                 Pending
+Copy<br>Approve the request<br>k certificate approve 60099@internal.users
+
+k get certificatesigningrequests.certificates.k8s.io 
+NAME                   AGE     SIGNERNAME                                    REQUESTOR                  REQUESTEDDURATION   CONDITION
+60099@internal.users   2m37s   kubernetes.io/kube-apiserver-client           kubernetes-admin           24h                 Approved,Issued
+Copy<br><br>This command retrieves the whole CSR<br>k get certificatesigningrequests.certificates.k8s.io/60099@internal.users -o yaml
+Copy<br>Whereas this retrieves a crt<br>k get certificatesigningrequests.certificates.k8s.io/60099@internal.users -o jsonpath='{.status.certificate}' | base64 -d &gt; 60099.crt
+Copy<br><br>openssl x509 --in /etc/kubernetes/pki/ca.crt -text --noout]]></description><link>cks\cluster-setup-and-hardening\certificates.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Certificates.md</guid><pubDate>Tue, 27 Aug 2024 15:46:18 GMT</pubDate></item><item><title><![CDATA[CIS Benchmark]]></title><description><![CDATA[<a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:etcd" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#etcd</a> <a class="tag" href="?query=tag:api-server" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#api-server</a> 
+ <br><a href=".?query=tag:node" class="tag" target="_blank" rel="noopener">#node</a> <a href=".?query=tag:etcd" class="tag" target="_blank" rel="noopener">#etcd</a> <a href=".?query=tag:api-server" class="tag" target="_blank" rel="noopener">#api-server</a><br>
+Security configuration guidelines for Kubernetes.<br>
+Example: Provides a checklist to ensure your Kubernetes setup follows industry-standard security practices.<br>
+Needs: Manual or automated checks against Kubernetes configurations, often implemented with auditing tools.<br>It is a benchmark to provide a security baseline. It works for:<br>
+<br>OS
+<br>Cloud
+<br>Devices
+<br>Network
+<br>Software
+<br>etc
+<br><a rel="noopener" class="external-link" href="https://www.cisecurity.org/cis-benchmarks" target="_blank">https://www.cisecurity.org/cis-benchmarks</a><br>CIS Benchmark assessment tools:<br>
+<br>CIS CAT Pro <a rel="noopener" class="external-link" href="https://www.cisecurity.org/cybersecurity-tools/cis-cat-pro/cis-benchmarks-supported-by-cis-cat-pro" target="_blank">https://www.cisecurity.org/cybersecurity-tools/cis-cat-pro/cis-benchmarks-supported-by-cis-cat-pro</a>
+<br>CIS CAT Lite <a rel="noopener" class="external-link" href="https://learn.cisecurity.org/cis-cat-lite" target="_blank">https://learn.cisecurity.org/cis-cat-lite</a>
+<br>cd /root/Assessor
+sh ./Assessor-CLI.sh -i -rd /var/www/html/ -nts -rp index
+Copy<br>
+<br>Kube-bench from aqua <a rel="noopener" class="external-link" href="https://aquasecurity.github.io/kube-bench/v0.6.15/" target="_blank">https://aquasecurity.github.io/kube-bench/v0.6.15/</a>
+<br>curl -L https://github.com/aquasecurity/kube-bench/releases/download/v0.4.0/kube-bench_0.4.0_linux_amd64.tar.gz -o kube-bench_0.4.0_linux_amd64.tar.gz
+tar -xvf kube-bench_0.4.0_linux_amd64.tar.gz
+
+./kube-bench --config-dir `pwd`/cfg --config `pwd`/cfg/config.yaml
+Copy<br>Run benchmark against a specific resource kube-bench run --targets master --check="1.3.2"<br>
+<br>master: Master node components such as the API server, controller manager, and scheduler.
+<br>node: Worker node components such as kubelet and kube-proxy.
+<br>etcd: etcd key-value store.
+<br>controlplane: Entire control plane components (similar to master but may encompass additional checks depending on the benchmark version and configuration).
+<br>policies: Policies, such as network policies or Pod Security Policies.
+<br>Course material:<br>
+<br>Killer Shell - Cluster Setup - CIS Benchmarks  <a rel="noopener" class="external-link" href="https://www.youtube.com/watch?v=d9xfB5qaOfg&amp;t=9253s-" target="_blank">https://www.youtube.com/watch?v=d9xfB5qaOfg&amp;t=9253s-</a> 
+]]></description><link>cks\cluster-setup-and-hardening\cis-benchmark.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/CIS Benchmark.md</guid><pubDate>Thu, 01 Aug 2024 12:53:31 GMT</pubDate></item><item><title><![CDATA[Ingress]]></title><description><![CDATA[<a class="tag" href="?query=tag:service" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#service</a> 
+ <br><a href=".?query=tag:service" class="tag" target="_blank" rel="noopener">#service</a> <br>Imperative service with Exact path type  kubectl create ingress world --rule="world.universe.mine/europe=asia:80"<br>Imperative service with Prefix path type  kubectl create ingress world --rule="world.universe.mine/europe*=asia:80"<br>Imperative service with Prefix, target rewrite and namespace<br>kubectl create ingress world \
+--rule="world.universe.mine/europe*=europe:80" \
+--rule="world.universe.mine/asia*=asia:80" \
+--annotation "nginx.ingress.kubernetes.io/rewrite-target=/" \
+--class=nginx \
+-n world
+Copy<br>Secure with TLS<br>
+<br>
+Request certificate and key<br>
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.crt -subj "/CN=world.universe.mine/O=world.universe.mine"
+
+<br>
+Create secret<br>
+kubectl create secret tls tls-secret --cert=cert.crt --key=cert.key -n world
+
+<br>
+Edit ingress
+
+<br>apiVersion: v1
+items:
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    name: world
+    namespace: world
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: world.universe.mine
+      http:
+        paths:
+        - backend:
+            service:
+              name: europe
+              port:
+                number: 80
+          path: /europe
+          pathType: Prefix
+        - backend:
+            service:
+              name: asia
+              port:
+                number: 80
+          path: /asia
+          pathType: Prefix
+    tls:
+    - hosts:
+      - world.universe.mine
+      secretName: tls-secret
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 172.30.1.2
+kind: List
+metadata:
+  resourceVersion: ""
+Copy<br>Where the following was added<br>tls:
+    - hosts:
+      - world.universe.mine
+      secretName: tls-secret
+Copy<br>
+<br>
+Verify<br>
+curl -kv https://world.universe.mine:30443/europe
+
+<br>
+Bonus: One liner imperative
+
+<br>kubectl create ingress world \
+--rule="world.universe.mine/europe*=europe:80,tls=tls-secret" \
+--rule="world.universe.mine/asia*=asia:80,tls=tls-secret" \
+--annotation "nginx.ingress.kubernetes.io/rewrite-target=/" \
+--class=nginx \
+-n world
+Copy<br>Ingress - Annotations and rewrite-target<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/416fc31d-8436-4fb2-be44-8d29bee19334" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/416fc31d-8436-4fb2-be44-8d29bee19334</a><br>Ingress<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/42cf821c-38ef-4cd5-abce-dfcaf0250c11" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/42cf821c-38ef-4cd5-abce-dfcaf0250c11</a>]]></description><link>cks\cluster-setup-and-hardening\ingress.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Ingress.md</guid><pubDate>Wed, 21 Aug 2024 14:12:36 GMT</pubDate></item><item><title><![CDATA[KubeConfig]]></title><description><![CDATA[ 
+ <br>Add user to config<br>k config  get-users
+NAME
+kubernetes-admin
+Copy<br>See <a data-href="Certificates" href="cks\cluster-setup-and-hardening\certificates.html" class="internal-link" target="_self" rel="noopener">Certificates</a> to obtain key and csr<br>k config set-credentials 60099@internal.users --client-key 60099.key --client-certificate 60099.crt
+Copy<br>k config  get-users
+NAME
+60099@internal.users
+kubernetes-admin
+Copy<br>Setting a context<br>k config get-contexts
+CURRENT   NAME                          CLUSTER      AUTHINFO           NAMESPACE
+*         kubernetes-admin@kubernetes   kubernetes   kubernetes-admin
+
+k config get-clusters
+NAME
+kubernetes
+Copy<br>k config set-context 60099@internal.users --cluster=kubernetes --user=60099@internal.users
+Copy<br>k config get-contexts
+CURRENT   NAME                          CLUSTER      AUTHINFO               NAMESPACE
+          60099@internal.users          kubernetes   60099@internal.users   
+*         kubernetes-admin@kubernetes   kubernetes   kubernetes-admin
+Copy<br>Using a context effectively changing current-context: kubernetes-admin@kubernetes<br>k config use-context 60099@internal.users
+Copy<br>which changes to current-context: 60099@internal.users<br>As configuration file k config view<br>apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://172.30.1.2:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: 60099@internal.users
+  name: 60099@internal.users
+- context:
+    cluster: kubernetes
+    user: kubernetes-admin
+  name: kubernetes-admin@kubernetes
+current-context: kubernetes-admin@kubernetes
+kind: Config
+preferences: {}
+users:
+- name: 60099@internal.users
+  user:
+    client-certificate: /root/60099.crt
+    client-key: /root/60099.key
+- name: kubernetes-admin
+  user:
+    client-certificate-data: DATA+OMITTED
+    client-key-data: DATA+OMITTED
+Copy<br>Or cat ~/.kube/config]]></description><link>cks\cluster-setup-and-hardening\kubeconfig.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/KubeConfig.md</guid><pubDate>Mon, 02 Sep 2024 12:48:02 GMT</pubDate></item><item><title><![CDATA[Kubelet security]]></title><description><![CDATA[ 
+ <br>The config file<br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/" target="_blank">https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/</a><br>
+/var/lib/kubelet/config.yaml<br>The deprecated way was to use arguments like --protect-kernel-defaults<br>
+Now in config file in the form protectKernelDefault<br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/" target="_blank">https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/</a>]]></description><link>cks\cluster-setup-and-hardening\kubelet-security.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Kubelet security.md</guid><pubDate>Thu, 29 Aug 2024 08:43:10 GMT</pubDate></item><item><title><![CDATA[Network policies]]></title><description><![CDATA[<a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:service" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#service</a> 
+ <br><a href=".?query=tag:pod" class="tag" target="_blank" rel="noopener">#pod</a> <a href=".?query=tag:service" class="tag" target="_blank" rel="noopener">#service</a> <br>Ingress and Egress<br>Example deny all egress<br>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+
+Copy<br>Example deny out but DNS<br>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-out
+  namespace: app
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+Copy<br>Example allow towards namespace<br>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np
+  namespace: space1
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+     - namespaceSelector:
+        matchLabels:
+         kubernetes.io/metadata.name: space2
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+Copy<br>Example allow from namespace<br>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np
+  namespace: space2
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+   - from:
+     - namespaceSelector:
+        matchLabels:
+         kubernetes.io/metadata.name: space1
+Copy<br>Example allow towards more namespaces<br>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-namespaces
+spec:
+  podSelector:
+    matchLabels:
+      app: myapp
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchExpressions:
+        - key: namespace
+          operator: In
+          values: ["frontend", "backend"]
+Copy<br>Example deny a specific IP<br>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: metadata-server
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      trust: nope
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+          - 1.1.1.1/32
+Copy<br>Useful command to run in Busybox is nc<br>nc -zv db-service 3306
+db-service (10.110.206.8:3306) open
+nc -zv payroll-service 8080
+payroll-service (10.97.194.138:8080) open
+Copy<br>Maybe define another container running<br>nc -l 3306
+Copy]]></description><link>cks\cluster-setup-and-hardening\network-policies.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Network policies.md</guid><pubDate>Thu, 22 Aug 2024 09:49:00 GMT</pubDate></item><item><title><![CDATA[RBAC]]></title><description><![CDATA[<a class="tag" href="?query=tag:rbac" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#rbac</a> 
+ <br><a href=".?query=tag:rbac" class="tag" target="_blank" rel="noopener">#rbac</a> <br>Create a serviceaccount that can view resources in the cluster<br>k create serviceaccount -n ns1 pipeline
+k create serviceaccount -n ns2 pipeline
+
+k create clusterrolebinding ns1-pipeline-view --clusterrole=view --serviceaccount=ns1:pipeline
+k create clusterrolebinding ns2-pipeline-view --clusterrole=view --serviceaccount=ns2:pipeline
+
+k auth can-i get deployment --as system:serviceaccount:ns1:pipeline
+k auth can-i get deployment --as system:serviceaccount:ns2:pipeline
+Copy<br>Create a serviceaccount that can create and delete deployments in its namespace<br>k create -n ns1 role deployment-manager --verb=create,delete --resource=deployments
+k create -n ns1 rolebinding pipeline-deployment-manager --role=deployment-manager --serviceaccount=ns1:pipeline
+
+k -n ns1 auth can-i create deployment --as=system:serviceaccount:ns1:pipeline
+
+k create -n ns2 role deployment-manager --verb=create,delete --resource=deployments
+k create -n ns2 rolebinding pipeline-deployment-manager --role=deployment-manager --serviceaccount=ns2:pipeline
+
+k -n ns2 auth can-i create deployment --as=system:serviceaccount:ns2:pipeline
+Copy<br>Create a role like clusterrole view but exclude one namespace (e.g. kube-system). The only way to do it is to create a rolebinding for all other ns.<br>k get ns
+NAME                 STATUS   AGE
+applications         Active   75s
+default              Active   12d
+kube-node-lease      Active   12d
+kube-public          Active   12d
+kube-system          Active   12d
+local-path-storage   Active   12d
+
+k create rolebinding -n applications smoke-view --clusterrole=view --user=smoke
+k create rolebinding -n default smoke-view --clusterrole=view --user=smoke
+k create rolebinding -n kube-node-lease smoke-view --clusterrole=view --user=smoke
+k create rolebinding -n kube-public smoke-view --clusterrole=view --user=smoke
+Copy<br>To test a normal user<br>k auth can-i get pod --user martin -n dev-z
+yes
+
+k auth can-i delete pod --user martin -n dev-z
+no
+Copy]]></description><link>cks\cluster-setup-and-hardening\rbac.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/RBAC.md</guid><pubDate>Fri, 02 Aug 2024 17:13:05 GMT</pubDate></item><item><title><![CDATA[Securing Kubernetes dashboard]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/" target="_blank">https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/</a><br># Add kubernetes-dashboard repository
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+# Deploy a Helm Release named "kubernetes-dashboard" using the kubernetes-dashboard chart
+helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
+Copy<br>To access via a proxy we need:<br>
+<br>serviceaccount
+<br>cluster-rolebinding
+<br>token
+<br>apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+Copy<br>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+Copy<br>kubectl -n kubernetes-dashboard create token admin-user
+Copy<br>Then use the token in the GUI<br>The old way kubectl get secrets -n kubernetes-dashboard admin-user -o go-template="{{.data.token | base64decode}}"<br>Access dashboard<br>
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443<br>
+Where 8443 is to be used in the browser e.g. https://localhost:8443<br>Additional documentation<br>
+<a rel="noopener" class="external-link" href="https://github.com/kubernetes/dashboard?tab=readme-ov-file" target="_blank">https://github.com/kubernetes/dashboard?tab=readme-ov-file</a><br>
+Arguments for the deployment yaml<br>
+<a rel="noopener" class="external-link" href="https://github.com/kubernetes/dashboard/blob/master/docs/common/arguments.md" target="_blank">https://github.com/kubernetes/dashboard/blob/master/docs/common/arguments.md</a>]]></description><link>cks\cluster-setup-and-hardening\securing-kubernetes-dashboard.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Securing Kubernetes dashboard.md</guid><pubDate>Tue, 27 Aug 2024 07:01:58 GMT</pubDate></item><item><title><![CDATA[Service Accounts]]></title><description><![CDATA[ 
+ <br>
+<br>Managed by the API
+<br>Each namespace has a default one
+<br> k get sa sa-tink -n tinkering -o yaml<br>apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: "2024-09-02T07:48:33Z"
+  name: sa-tink
+  namespace: tinkering
+  resourceVersion: "230347"
+  uid: 90ef2bc8-c28f-48b8-9556-1f9b616d786b
+Copy<br><br>Create a JSON Web Token (JWT)<br>
+k create token sa-tink -n tinkering <br>eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1HNnJ0R1NEb1I1UTZOWV91Z21MZkY0YW1mbHlyR1NISURjdVFNZldjS2cifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzI1MjY3MTA4LCJpYXQiOjE3MjUyNjM1MDgsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwianRpIjoiNGRkMjMyMDYtM2ZmYS00ZmQ0LThmODItNDViYzk0ZTNlYTcwIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJ0aW5rZXJpbmciLCJzZXJ2aWNlYWNjb3VudCI6eyJuYW1lIjoic2EtdGluayIsInVpZCI6IjkwZWYyYmM4LWMyOGYtNDhiOC05NTU2LTFmOWI2MTZkNzg2YiJ9fSwibmJmIjoxNzI1MjYzNTA4LCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6dGlua2VyaW5nOnNhLXRpbmsifQ.T9oYi_KDzREjCoANouUcBsDx3xk2qsY5QCmRMonNpEJlkqUVbp5znQU8eiqJ5pMuCJjaAcmOgbGH3Ml6jLvF2s2MdRqbIntLq0Efr_k6l2YxCvc0es8w4VMXJ9uuhi3ZNPAAmHZvtIOvBGflEf4rFvk4X_RneY83qrjdV1GInyvXAm42vYT0j2HG9mHJ5O_Mtuc6sT8wANnvPulLEKf60ZXF2Q8Geuj1r7cMh41bCr7_7Qf8wtIGQhKARsK0P9JHPIX78_3Vo7jA4nLW9EFQaY5fTrtQd5RN9i74BcHs0DFVQ34ta02aBeetJ0GQFoGkB9HVMXbYN90HGMzrTnlZ2Q<br>Decode it in <a data-href="https://jwt.io/" href="https://jwt.io/" class="internal-link" target="_self" rel="noopener">https://jwt.io/</a> <br>Create a pod that uses the SA<br>apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: pod-tink
+  name: pod-tink
+  namespace: tinkering
+spec:
+  serviceAccountName: sa-tink
+  containers:
+  - image: nginx
+    name: pod-tink
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+Copy<br>k exec -n tinkering pod-tink -it -- sh<br>cd  /run/secrets/kubernetes.io/serviceaccount
+# ls
+ca.crt  namespace  token
+Copy<br>Where token is a newly created token from sa-tink just for the pod.<br><br>env
+...
+KUBERNETES_SERVICE_PORT_HTTPS=443
+KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+KUBERNETES_SERVICE_HOST=10.96.0.1
+...
+Copy<br>This way we are system anonymous<br>curl https://10.96.0.1 -k
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {},
+  "status": "Failure",
+  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {},
+  "code": 403
+}
+Copy<br>But in this way we are authenticated<br>curl https://10.96.0.1 -k -H "Authorization: Bearer $(cat token)"
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {},
+  "status": "Failure",
+  "message": "forbidden: User \"system:serviceaccount:tinkering:sa-tink\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {},
+  "code": 403
+}
+Copy<br>This is often not needed and dangerous so we need the SA to not mount the Token automatically using automountServiceAccountToken: false either in the SA or in the POD<br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#opt-out-of-api-credential-automounting" target="_blank">https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#opt-out-of-api-credential-automounting</a>]]></description><link>cks\cluster-setup-and-hardening\service-accounts.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Service Accounts.md</guid><pubDate>Thu, 05 Sep 2024 08:38:28 GMT</pubDate></item><item><title><![CDATA[Verify platform binaries]]></title><description><![CDATA[<a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> 
+ <br><a href=".?query=tag:node" class="tag" target="_blank" rel="noopener">#node</a> <br>Compare SHA hashes of local and online files<br>VERSION=$(kubelet --version | cut -d ' ' -f2)
+wget https://dl.k8s.io/$VERSION/kubernetes-server-linux-amd64.tar.gz
+tar xzf kubernetes-server-linux-amd64.tar.gz
+Copy<br>whereis kubelet
+sha512sum /usr/bin/kubelet
+sha512sum kubernetes/server/bin/kubelet
+Copy<br>If different one has been manipulated<br>sha512sum  /usr/bin/kubelet 
+1b3ebe478ec521943b5910084f093a65e1f93aa6c949a941d9f58008e9d594eb859b049e71928ba1020634d6eb7577b7d9751dd26259f4378cf11c3fc96f2d97  /usr/bin/kubelet
+
+sha512sum  kubernetes/server/bin/kubelet 
+c09618a8ed80dc57bb58fba16ce579a21db3d2625bf14af29e7a64fd09642761d8b6a007c334284a6abca191ac4e4b0f3064e3e11537a9995dd23342045236d5  kubernetes/server/bin/kubelet
+Copy]]></description><link>cks\cluster-setup-and-hardening\verify-platform-binaries.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Verify platform binaries.md</guid><pubDate>Fri, 26 Jul 2024 09:02:59 GMT</pubDate></item><item><title><![CDATA[Benjamin Muschko]]></title><description><![CDATA[ 
+ <br>Certified Kubernetes Security Specialist (CKS) Crash Course<br>
+<a rel="noopener" class="external-link" href="https://github.com/bmuschko/cks-crash-course" target="_blank">https://github.com/bmuschko/cks-crash-course</a>]]></description><link>cks\exam\benjamin-muschko.html</link><guid isPermaLink="false">CKS/Exam/Benjamin Muschko.md</guid><pubDate>Mon, 19 Aug 2024 20:49:22 GMT</pubDate></item><item><title><![CDATA[CKS Exam]]></title><description><![CDATA[ 
+ <br>Resources<br>
+<br><a data-href="Killer-sh - CKS Simulator" href="cks\exam\killer-sh-cks-simulator.html" class="internal-link" target="_self" rel="noopener">Killer-sh - CKS Simulator</a>
+<br><a data-href="Killer-sh - CKS Scenarios" href="cks\exam\killer-sh-cks-scenarios.html" class="internal-link" target="_self" rel="noopener">Killer-sh - CKS Scenarios</a>
+<br>In Exam resources available <a rel="noopener" class="external-link" href="https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed#certified-kubernetes-security-specialist-cks" target="_blank">https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed#certified-kubernetes-security-specialist-cks</a>
+<br>LXF<br>
+<br>Exam page <a rel="noopener" class="external-link" href="https://trainingportal.linuxfoundation.org/learn/course/certified-kubernetes-security-specialist-cks/exam/exam" target="_blank">https://trainingportal.linuxfoundation.org/learn/course/certified-kubernetes-security-specialist-cks/exam/exam</a>
+<br><a data-href="Training" href="cks\exam\training.html" class="internal-link" target="_self" rel="noopener">Training</a>]]></description><link>cks\exam\cks-exam.html</link><guid isPermaLink="false">CKS/Exam/CKS Exam.md</guid><pubDate>Wed, 07 Aug 2024 12:20:55 GMT</pubDate></item><item><title><![CDATA[Killercoda Scenarios]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/blob/master/Scenarios.md" target="_blank">https://github.com/killer-sh/cks-course-environment/blob/master/Scenarios.md</a><br><br>Many topics in the CKS course have interactive in-browser Killercoda scenarios at the end. Solve these to test and harden your knowledge!<br><br>
+<br>
+8 Cluster Hardening - Exercise caution in using ServiceAccounts<br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#serviceaccount-admission-controller" target="_blank">https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#serviceaccount-admission-controller</a><br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/" target="_blank">https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/</a>
+
+<br>
+18 Runtime Security - Immutability of containers at runtime<br>
+emptyDir configuration example <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir" target="_blank">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a><br>
+Configure a Security Context for a Pod or Container <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/configure-pod-container/security-context/" target="_blank">https://kubernetes.io/docs/tasks/configure-pod-container/security-context/</a>
+
+<br>
+19 <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#log-backend" target="_blank">https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#log-backend</a>
+
+<br><br><a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/tree/master/cluster-setup/latest" target="_blank">https://github.com/killer-sh/cks-course-environment/tree/master/cluster-setup/latest</a><br>curl -s https://raw.githubusercontent.com/killer-sh/cks-course-environment/master/cluster-setup/latest/install_master.sh -o install_master.sh<br>curl -s https://raw.githubusercontent.com/killer-sh/cks-course-environment/master/cluster-setup/latest/install_worker.sh -o install_worker.sh<br>NIC setup for VBox linked clones<br>
+<a rel="noopener" class="external-link" href="https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/" target="_blank">https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/</a><br>/etc/netplan/01-netcfg.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s3:
+      dhcp4: no
+      addresses:
+        - 192.168.64.40/24
+      gateway4: 192.168.64.1
+      nameservers:
+        addresses:
+          - 192.168.64.1
+Copy]]></description><link>cks\exam\killer-sh-cks-scenarios.html</link><guid isPermaLink="false">CKS/Exam/Killer-sh - CKS Scenarios.md</guid><pubDate>Tue, 20 Aug 2024 15:51:37 GMT</pubDate></item><item><title><![CDATA[Killer-sh - CKS Simulator]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://killer.sh/cks" target="_blank">https://killer.sh/cks</a>]]></description><link>cks\exam\killer-sh-cks-simulator.html</link><guid isPermaLink="false">CKS/Exam/Killer-sh - CKS Simulator.md</guid><pubDate>Fri, 05 Jul 2024 08:37:29 GMT</pubDate></item><item><title><![CDATA[Mock-ups & Challenges]]></title><description><![CDATA[ 
+ <br>
+<br>Mock-ups <a rel="noopener" class="external-link" href="https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/08-Mock-Exams" target="_blank">https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/08-Mock-Exams</a>
+<br>Challenges <a rel="noopener" class="external-link" href="https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/09-cks-challenges" target="_blank">https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/09-cks-challenges</a>
+]]></description><link>cks\exam\mock-ups-&amp;-challenges.html</link><guid isPermaLink="false">CKS/Exam/Mock-ups &amp; Challenges.md</guid><pubDate>Tue, 23 Jul 2024 18:30:30 GMT</pubDate></item><item><title><![CDATA[Resources available during]]></title><description><![CDATA[ 
+ <br>
+<br>Kubernetes <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/" target="_blank">https://kubernetes.io/docs/</a> <a rel="noopener" class="external-link" href="https://kubernetes.io/blog/" target="_blank">https://kubernetes.io/blog/</a>
+<br>Falco <a rel="noopener" class="external-link" href="https://falco.org/docs/" target="_blank">https://falco.org/docs/</a>
+<br>Trivy <a rel="noopener" class="external-link" href="https://aquasecurity.github.io/trivy/v0.54/" target="_blank">https://aquasecurity.github.io/trivy/v0.54/</a>
+<br>ETCD <a rel="noopener" class="external-link" href="https://etcd.io/docs/" target="_blank">https://etcd.io/docs/</a>
+<br>AppArmor <a rel="noopener" class="external-link" href="https://gitlab.com/apparmor/apparmor/-/wikis/Documentation" target="_blank">https://gitlab.com/apparmor/apparmor/-/wikis/Documentation</a>
+<br><br>
+<br>Tracee <a rel="noopener" class="external-link" href="https://aquasecurity.github.io/tracee/latest/" target="_blank">https://aquasecurity.github.io/tracee/latest/</a>
+<br>Kube-bench <a rel="noopener" class="external-link" href="https://aquasecurity.github.io/kube-bench/v0.6.15/" target="_blank">https://aquasecurity.github.io/kube-bench/v0.6.15/</a>
+<br>Kubesec <a rel="noopener" class="external-link" href="https://kubesec.io/" target="_blank">https://kubesec.io/</a>
+]]></description><link>cks\exam\resources-available-during.html</link><guid isPermaLink="false">CKS/Exam/Resources available during.md</guid><pubDate>Tue, 03 Sep 2024 09:58:17 GMT</pubDate></item><item><title><![CDATA[ToDo]]></title><description><![CDATA[ 
+ <br>
+<br> Labs - View Certificates
+<br> Labs - Certificate API
+<br> Labs - Kubectl Proxy &amp; Port Forward
+<br>Labs - Cluster upgrade
+<br>Labs - Ingress - 1
+<br>Labs - Ingress - 2
+<br>Article: Ingress<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/42cf821c-38ef-4cd5-abce-dfcaf0250c11" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/42cf821c-38ef-4cd5-abce-dfcaf0250c11</a><br>
+Article: Ingress - Annotations and rewrite-target<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/416fc31d-8436-4fb2-be44-8d29bee19334" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/416fc31d-8436-4fb2-be44-8d29bee19334</a><br>Article: Securing Control Plane Communications with Ciphers<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/3e7ad1e6-8aa3-476b-8e26-7c48659ae91e" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/3e7ad1e6-8aa3-476b-8e26-7c48659ae91e</a><br>
+<br>Lab - Identify open ports, remove packages services
+<br>Lab - UFW Firewall
+<br>Lab - Pod Security Admission.
+<br>Article: Understanding Pod Security Policy<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/a3ca9b49-2589-4497-afb1-213b9c4dc47d" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/a3ca9b49-2589-4497-afb1-213b9c4dc47d</a><br>
+<br>Labs - OPA
+<br>Labs - OPA in Kubernetes
+<br>Lab - Manage Kubernetes secrets
+<br>Article - Note on Secrets<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/cb91290b-c3f5-41a5-af2f-ec2666bf6da6" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/cb91290b-c3f5-41a5-af2f-ec2666bf6da6</a><br>
+<br>Labs - Image Security
+<br>Labs - Ensure Immutability of Containers at Runtime
+<br><br>
+<br>
+Q2<br>
+falco rules<br>
+crictl ps -id 7a5ea6a080d1<br>
+crictl pods -id 7a864406b9794
+
+<br>
+Q5 more speed!
+
+<br>
+Q8<br>
+Where is documentation?
+
+<br>
+Q12<br>
+Documentation about curl kube-api
+
+<br>
+Q13<br>
+Try to recreate scenario and use ingress and egress instead
+
+<br>
+Q14<br>
+Syscall and strace
+
+<br>
+Q19<br>
+Immutable Root FS
+
+<br><br>practice EOF<br>practice jq<br><br>An automated analysis of your completed exam shows the three lowest scoring topics to be:<br>
+<a rel="noopener" class="external-link" href="https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/" target="_blank">https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/</a><br>
+<br>Supply Chain Security
+<br>Cluster Hardening
+<br>Minimize Microservice Vulnerabilities
+<br>Review<br>
+<br>NodeRestriction
+<br>ServiceAccount limiting
+<br>Audit rules
+<br>Falco rules
+<br>Sysdig
+<br>Dockerfiles best-practices
+<br>Secrets mount in pods
+<br>ImagePolicyWebhook
+<br>Restrict Communication (API-Server), Webhook as auth-mode
+<br>Restrict Communication from Kubelet to API-Server
+<br>Network Policies<br>
+<a rel="noopener" class="external-link" href="https://medium.com/@artem_lajko/cks-evolution-2021-2023-60699c879886" target="_blank">https://medium.com/@artem_lajko/cks-evolution-2021-2023-60699c879886</a>
+]]></description><link>cks\exam\todo.html</link><guid isPermaLink="false">CKS/Exam/ToDo.md</guid><pubDate>Wed, 04 Sep 2024 07:07:06 GMT</pubDate></item><item><title><![CDATA[Training]]></title><description><![CDATA[ 
+ <br>Killer-sh<br>
+<br>CKS full course <a rel="noopener" class="external-link" href="https://youtu.be/d9xfB5qaOfg" target="_blank">https://youtu.be/d9xfB5qaOfg</a>
+<br>CKS course resources <a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/blob/master/Resources.md" target="_blank">https://github.com/killer-sh/cks-course-environment/blob/master/Resources.md</a><br>
+Kodekloud
+<br>Certified Kubernetes Security Specialist (CKS) Course <a rel="noopener" class="external-link" href="https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course" target="_blank">https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course</a>
+]]></description><link>cks\exam\training.html</link><guid isPermaLink="false">CKS/Exam/Training.md</guid><pubDate>Tue, 02 Jul 2024 09:31:05 GMT</pubDate></item><item><title><![CDATA[Admission Controllers]]></title><description><![CDATA[ 
+ <br>
+An&nbsp;admission controller&nbsp;is a piece of code that intercepts requests to the Kubernetes API server prior to persistence of the object, but after the request is authenticated and authorized. Admission controllers may be&nbsp;validating,&nbsp;mutating, or both. Mutating controllers may modify objects related to the requests they admit; validating controllers may not.
+<br>An example of admission controller is NamespaceAutoProvision<br>Need to be added to kube-apiserver config<br>spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --advertise-address=192.21.249.9
+    - --allow-privileged=true
+    - --authorization-mode=Node,RBAC
+    - --client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --enable-admission-plugins=NodeRestriction,NamespaceAutoProvision
+Copy<br>Check the plugins  enabled/disabled ps -ef | grep kube-apiserver | grep admission-plugins<br>--enable-admission-plugins=NodeRestriction,NamespaceAutoProvision
+--disable-admission-plugins=DefaultStorageClass
+Copy]]></description><link>cks\minimise-microservice-vulnerabilities\admission-controllers.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/Admission Controllers.md</guid><pubDate>Thu, 15 Aug 2024 14:46:19 GMT</pubDate></item><item><title><![CDATA[Admission webhooks]]></title><description><![CDATA[ 
+ <br>Part of <a data-href="Dynamic Admission Control" href="cks\minimise-microservice-vulnerabilities\dynamic-admission-control.html" class="internal-link" target="_self" rel="noopener">Dynamic Admission Control</a><br>
+<br>Validating (Approve or deny)
+<br>Mutating (Change before deploy)
+<br>Resources:<br>What are admission webhooks? <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/" target="_blank">https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/</a>]]></description><link>cks\minimise-microservice-vulnerabilities\admission-webhooks.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/Admission webhooks.md</guid><pubDate>Sun, 04 Aug 2024 10:02:04 GMT</pubDate></item><item><title><![CDATA[Dynamic Admission Control]]></title><description><![CDATA[<a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> 
+ <br><a href=".?query=tag:admissioncontroller" class="tag" target="_blank" rel="noopener">#admissioncontroller</a><br>
+This is a specific type of <a data-href="Admission Controllers" href="cks\minimise-microservice-vulnerabilities\admission-controllers.html" class="internal-link" target="_self" rel="noopener">Admission Controllers</a> that allow to extend them to specific needs.<br>
+Example: Gatekeepers for the cluster, intercepting API requests before they are persisted<br>
+Needs: Webhook server, Service to expose it, Mutating/Validating WebhookConfiguration, TLS Certificates, RBAC<br>
+<br>Webhook Server: A service that processes admission requests, typically deployed within the cluster.
+<br>Service: Exposes the webhook server to the Kubernetes API server.
+<br>MutatingWebhookConfiguration and/or ValidatingWebhookConfiguration: Kubernetes resources that register the webhook with the API server.
+<br>TLS Certificates: Secures communication between the API server and the webhook server; includes a certificate for the server and a CA bundle for the API server to trust the webhook.
+<br>RBAC Policies: Define permissions for the webhook server to interact with Kubernetes resources as needed.
+<br>Configuration Files: YAML manifests for deploying the webhook server, service, and webhook configurations.
+<br>
+In addition to&nbsp;<a data-tooltip-position="top" aria-label="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/" rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/" target="_blank">compiled-in admission plugins</a>, admission plugins can be developed as extensions and run as webhooks configured at runtime. This page describes how to build, configure, use, and monitor admission webhooks.
+<br>k create ns webhook-demo<br>k create secret tls webhook-server-tls --cert=/root/keys/webhook-server-tls.crt --key=/root/keys/webhook-server-tls.key -n webhook-demo 
+secret/webhook-server-tls created
+Copy<br>Example Mutating Webhook Configuration - POD Create<br>apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: demo-webhook
+webhooks:
+  - name: webhook-server.webhook-demo.svc
+    clientConfig:
+      service:
+        name: webhook-server
+        namespace: webhook-demo
+        path: "/mutate"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURQekNDQWllZ0F3SUJBZ0lVRklFMVZFZmZTcXFnRUxZSzhsR2RZQkh4eEJNd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0x6RXRNQ3NHQTFVRUF3d2tRV1J0YVhOemFXOXVJRU52Ym5SeWIyeHNaWElnVjJWaWFHOXZheUJFWlcxdgpJRU5CTUI0WERUSTBNRGN3TlRFeE5EVXlPVm9YRFRJME1EZ3dOREV4TkRVeU9Wb3dMekV0TUNzR0ExVUVBd3drClFXUnRhWE56YVc5dUlFTnZiblJ5YjJ4c1pYSWdWMlZpYUc5dmF5QkVaVzF2SUVOQk1JSUJJakFOQmdrcWhraUcKOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQWx5RURJcFhQVTI2VmhzQ2x2VE9mY3hRZk1aZU5kbnduOWxJeQpaVVlyYzJVK0VjcGE5VUVOSnZwRVJFaW9adUluNWhFVDV3YzNtOURtNVdJZ0tEMnBReHgrNzh4bW05NWJPR3lqCnJmOWNSbUErQzZzQ1BReFF5Q1hLZDg4cm5SUDA3aldvRHVFaXJybkdYREI3Nm15MS9DOWRMazJ2bExxRlFtMHkKbkZyMXJkL24wT1ZrVU9LVkdteGJXSDFlMmlWVHFKZ0dWTGhsaWljOXVUMXRFSG9tNkZDRjFuWVRhZHJaQzA2cgpPMmNGSHdXcE5iU29WZGtkZGtHMWZyYnFuRU1XbldyZStkdVhCUkFFWkVCbTVXMCtwZnBmcVo1eXFpc3VWcWdOCm15SXh0S2Q0SitOTGMwNTdhY290Rnc5K2l6anlMdXhkbHd2UTBhVmdTOVM5bmFrQ1hRSURBUUFCbzFNd1VUQWQKQmdOVkhRNEVGZ1FVNDI4M1EvQlpURjQ3MjRUbVR4R3ZORXNCcnVNd0h3WURWUjBqQkJnd0ZvQVU0MjgzUS9CWgpURjQ3MjRUbVR4R3ZORXNCcnVNd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBTkJna3Foa2lHOXcwQkFRc0ZBQU9DCkFRRUFIdHAraHozdWUvdlhHY2Y5bmU2azZLN3VicmxZcys1dDg5dnlOUk0vdUlOYThtaDV4TW9XclVXVWFSZGMKM0JGb2V6dldjemVrR3ZHdnBEMlN5cmtYV1dwSk0rQ3dZM2VIa3pQUkFxZTdYS2h1QkxTYmN5WFFiR2lLZDRpZwo3Q2dQMGxFTTZWZXRYSzNIbElQeHNHZGU0UHFwdnAyaGcvUXFTQmpkaERSMEdIekJGelY0YmxjSlZzaFJIQkZYClZIeWJxelVabjhWamhVTFNoUlU0WXZxV3Exc01nRWlSc0VxUVk5K1lCc2NYbkJjbEpsSUljVmpJcE1PMS9lTm4KM1h0ZUpnUkx6WWUxbC8zaFRCUld4Z04vdXpVdHViUEJZYlZkSDk4S0lsOSt5TWVUajNHNjdWblZ6WGdnYkN5eApnRG1aVHhkZU80Uyt5TThUUUxTbFBWeFQ2dz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    rules:
+      - operations: [ "CREATE" ]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    admissionReviewVersions: ["v1beta1"]
+    sideEffects: None
+Copy<br>A deployment and service need to be created for the webhook server<br>Pods that will run<br>securityContext:
+   runAsNonRoot: false
+Copy<br>Or no security context at all<br>Pods that will not run<br>securityContext:
+    runAsNonRoot: true
+    runAsUser: 0
+Copy]]></description><link>cks\minimise-microservice-vulnerabilities\dynamic-admission-control.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/Dynamic Admission Control.md</guid><pubDate>Thu, 15 Aug 2024 15:24:31 GMT</pubDate></item><item><title><![CDATA[Encrypting Confidential Data at Rest]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/" target="_blank">https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/</a><br>Prepare a secret passkey<br>echo 'this-is-very-sec' | base64
+dGhpcy1pcy12ZXJ5LXNlYwo=
+Copy<br>Create encryption configuration file<br>
+/etc/kubernetes/enc/enc.yaml<br>This example ensures:<br>
+<br>new secrets are encrypted aesgcm
+<br>non-encrypted ones can still be read identity
+<br>apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+      - secrets
+    providers:
+      - identity: {} # plain text, in other words NO encryption
+      - aesgcm:
+          keys:
+            - name: key1
+              secret: dGhpcy1pcy12ZXJ5LXNlYw==
+Copy<br>Modify kube-apiserver tp use the file above by adding<br>--encryption-provider-config=/etc/kubernetes/enc/enc.yaml
+...
+volumeMounts:
+    - mountPath: /etc/kubernetes/enc
+      name: enc
+      readOnly: true
+...
+volumes:
+  - hostPath:
+      path: /etc/kubernetes/enc
+      type: DirectoryOrCreate
+    name: enc
+Copy]]></description><link>cks\minimise-microservice-vulnerabilities\encrypting-confidential-data-at-rest.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/Encrypting Confidential Data at Rest.md</guid><pubDate>Thu, 22 Aug 2024 08:19:40 GMT</pubDate></item><item><title><![CDATA[gVisor]]></title><description><![CDATA[<a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> 
+ <br><a href=".?query=tag:container" class="tag" target="_blank" rel="noopener">#container</a><br>
+Sandbox for container isolation.<br>
+Example: Runs containers with additional security boundaries, preventing them from accessing the host system directly.<br>
+Needs: Installation on the host system, configured runtime class in Kubernetes YAML.<br>Create runtimeclass<br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/containers/runtime-class/#2-create-the-corresponding-runtimeclass-resources" target="_blank">https://kubernetes.io/docs/concepts/containers/runtime-class/#2-create-the-corresponding-runtimeclass-resources</a><br># RuntimeClass is defined in the node.k8s.io API group
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  # The name the RuntimeClass will be referenced by.
+  # RuntimeClass is a non-namespaced resource.
+  name: gvisor
+# The name of the corresponding CRI configuration
+handler: runsc
+Copy<br>Apply to Pod<br>apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: sec
+  name: sec
+spec:
+  runtimeClassName: gvisor
+  containers:
+  - image: nginx:1.21.5-alpine
+    name: sec
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+Copy]]></description><link>cks\minimise-microservice-vulnerabilities\gvisor.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/gVisor.md</guid><pubDate>Thu, 01 Aug 2024 12:46:56 GMT</pubDate></item><item><title><![CDATA[OPA]]></title><description><![CDATA[ 
+ <br>Open Policy Agent<br>Installation:<br>curl -L -o opa https://github.com/open-policy-agent/opa/releases/download/&lt;version&gt;/opa_linux_amd64
+chmod 755 ./opa
+./opa run -s
+Copy<br>Example policy<br>package httpapi.authz
+
+# HTTP API request
+import input
+default allow = false
+
+allow {
+  input.path == "home"
+  input.user == "john"
+}
+Copy<br>Load the policy<br>curl -X PUT --data-binary @example.rego http://localhost:8181/v1/policies/example1
+Copy<br>View current policies<br>curl http://localhost:8181/v1/policies
+Copy<br>Kubernetes uses <a data-href="OPA Gatekeeper" href="cks\minimise-microservice-vulnerabilities\opa-gatekeeper.html" class="internal-link" target="_self" rel="noopener">OPA Gatekeeper</a><br>Resources<br>
+<br>Rego language <a rel="noopener" class="external-link" href="https://www.openpolicyagent.org/docs/latest/policy-language/" target="_blank">https://www.openpolicyagent.org/docs/latest/policy-language/</a>
+<br>Playground <a rel="noopener" class="external-link" href="https://play.openpolicyagent.org/" target="_blank">https://play.openpolicyagent.org/</a>
+<br>Policy testing <a rel="noopener" class="external-link" href="https://www.openpolicyagent.org/docs/latest/policy-testing/" target="_blank">https://www.openpolicyagent.org/docs/latest/policy-testing/</a>
+<br>Killer Shell <a rel="noopener" class="external-link" href="https://www.youtube.com/watch?v=d9xfB5qaOfg" target="_blank">https://www.youtube.com/watch?v=d9xfB5qaOfg</a>
+]]></description><link>cks\minimise-microservice-vulnerabilities\opa.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/OPA.md</guid><pubDate>Thu, 22 Aug 2024 13:19:36 GMT</pubDate></item><item><title><![CDATA[OPA Gatekeeper]]></title><description><![CDATA[<a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> 
+ <br><a href=".?query=tag:pod" class="tag" target="_blank" rel="noopener">#pod</a> <a href=".?query=tag:admissioncontroller" class="tag" target="_blank" rel="noopener">#admissioncontroller</a><br>
+OPA Gatekeeper is an implementation of <a data-href="OPA" href="cks\minimise-microservice-vulnerabilities\opa.html" class="internal-link" target="_self" rel="noopener">OPA</a><br>
+Policy engine for enforcing security policies.<br>
+Example: Ensures that all deployed containers must have specific security labels<br>
+Needs: OPA policies written in Rego, deployed as a Kubernetes admission controller.<br>
+Provides K8s CRDs Custom Resource Definitions<br>How to use Gatekeeper <a rel="noopener" class="external-link" href="https://open-policy-agent.github.io/gatekeeper/website/docs/howto/" target="_blank">https://open-policy-agent.github.io/gatekeeper/website/docs/howto/</a><br>It is configured to work with validating <a data-href="Admission webhooks" href="cks\minimise-microservice-vulnerabilities\admission-webhooks.html" class="internal-link" target="_self" rel="noopener">Admission webhooks</a><br>Install<br>
+<a rel="noopener" class="external-link" href="https://open-policy-agent.github.io/gatekeeper/website/docs/install" target="_blank">https://open-policy-agent.github.io/gatekeeper/website/docs/install</a><br>kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/v3.16.3/deploy/gatekeeper.yaml
+Copy<br>Provides Custom Resource Definitions (CRD)<br>What - Where - How (Constrain template)<br>
+<br>What -All obj have specific label
+<br>Where -Enforced on admission controller - target: admission.k8s.gatekeeper.sh
+<br>How -Get labels of obj and check if has the right one - With a rego policy
+<br>From a Constraint Template you then implement Constraints<br>Constraint Template <br>apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+Copy<br>-&gt; Constraint<br>apiVersion: constraint.gatekeeper.sh/v1beta1
+kind: k8srequiredlabels
+metadata:
+  name: pod-must-gave-gk
+Copy<br>-&gt; Constraint<br>apiVersion: constraint.gatekeeper.sh/v1beta1
+kind: k8srequiredlabels
+metadata:
+  name: ns-must-gave-gk
+Copy<br><br>apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8strustedimages
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sTrustedImages
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8strustedimages
+
+        violation[{"msg": msg}] {
+          image := input.review.object.spec.containers[_].image
+          not startswith(image, "docker.io/")
+          not startswith(image, "k8s.gcr.io/")
+          msg := "not trusted image!"
+        }
+Copy<br>apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sTrustedImages
+metadata:
+  name: pod-trusted-images
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+Copy<br>Resources<br>
+OPA Gatekeeper Library <a rel="noopener" class="external-link" href="https://open-policy-agent.github.io/gatekeeper-library/website/" target="_blank">https://open-policy-agent.github.io/gatekeeper-library/website/</a><br>
+OPA Gatekeeper Demo Github <a rel="noopener" class="external-link" href="https://github.com/open-policy-agent/gatekeeper/tree/master/demo" target="_blank">https://github.com/open-policy-agent/gatekeeper/tree/master/demo</a><br>
+OPA Gatekeeper Resources <a rel="noopener" class="external-link" href="https://github.com/open-policy-agent/gatekeeper/tree/master/example/resources" target="_blank">https://github.com/open-policy-agent/gatekeeper/tree/master/example/resources</a><br>
+K8S reference <a rel="noopener" class="external-link" href="https://kubernetes.io/blog/2019/08/06/opa-gatekeeper-policy-and-governance-for-kubernetes/" target="_blank">https://kubernetes.io/blog/2019/08/06/opa-gatekeeper-policy-and-governance-for-kubernetes/</a>]]></description><link>cks\minimise-microservice-vulnerabilities\opa-gatekeeper.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/OPA Gatekeeper.md</guid><pubDate>Thu, 22 Aug 2024 15:03:57 GMT</pubDate></item><item><title><![CDATA[Pod Security Policies]]></title><description><![CDATA[<a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> <a class="tag" href="?query=tag:labels" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#labels</a> 
+ <br><a href=".?query=tag:admissioncontroller" class="tag" target="_blank" rel="noopener">#admissioncontroller</a> <a href=".?query=tag:labels" class="tag" target="_blank" rel="noopener">#labels</a><br>
+PSA &amp; PSS Pod Security Admission and Standards (Once PSP Pod Security Policy)<br>
+A way to regulate privileged, runAsUser, CAP_SYS_BOOT, CAP_SYS_TIME, etc.<br>Enabled by default<br>kubectl exec -n kube-system kube-apiserver-controlplane -it -- kube-apiserver -h | grep enable-admission-plugins
+Copy<br>PSS Profiles: <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/security/pod-security-standards/" target="_blank">https://kubernetes.io/docs/concepts/security/pod-security-standards/</a><br>
+<br>Privileged: Unrestricted policy
+<br>Baseline: Minimal restrictive policy
+<br>Restricted: Heavily restricted policy<br>
+PSA Mode: <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/security/pod-security-admission/" target="_blank">https://kubernetes.io/docs/concepts/security/pod-security-admission/</a>
+<br>enforce: Reject pod
+<br>audit: Record in the audit logs
+<br>warm: Trigger user-facing warning
+<br>PSS/PSA applied at the namespaces level<br>kubectl label ns payroll pod-security.kubernetes.io/enforce=restricted
+
+kubectl label ns beta pod-security.kubernetes.io/enforce=baseline pod-security.kubernetes.io/warn=restricted
+Copy<br>Example admission configuration<br>--- admission-configuration.yaml 
+apiVersion: admissionregistration.k8s.io/v1
+kind: AdmissionConfiguration
+plugins:
+  - name: PodSecurity
+    configuration:
+      apiVersion: pod-security.admission.config.k8s.io/v1
+      kind: PodSecurityConfiguration
+      defaults:
+        enforce: baseline
+        enforce-version: latest
+        audit: restricted
+        audit-version: latest
+        warn: restricted
+        warn-version: latest
+      exemptions:
+        usernames: [] 
+        runtimeClassNames: [] 
+        namespaces: [my-namespace] 
+Copy<br>Which you would enable as<br>
+--admission-control-config-file=/etc/kubernetes/admission-configuration.yaml <br>
+Understanding Pod Security Policy<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/a3ca9b49-2589-4497-afb1-213b9c4dc47d" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/a3ca9b49-2589-4497-afb1-213b9c4dc47d</a>]]></description><link>cks\minimise-microservice-vulnerabilities\pod-security-policies.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/Pod Security Policies.md</guid><pubDate>Wed, 21 Aug 2024 15:10:38 GMT</pubDate></item><item><title><![CDATA[Secrets]]></title><description><![CDATA[ 
+ <br>Secret add env variable<br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/#define-container-environment-variables-with-data-from-multiple-secrets" target="_blank">https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/#define-container-environment-variables-with-data-from-multiple-secrets</a><br>k create secret generic holy --from-literal creditcard=1111222233334444<br>apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:  
+  containers:
+  - image: nginx
+    name: pod1
+    env:
+      - name: HOLY
+        valueFrom:
+          secretKeyRef:
+            name: holy
+            key: creditcard
+Copy<br>Verify<br>kubectl exec pod1 -- env | grep "HOLY=1111222233334444"
+Copy<br>Secret as a mount volume<br>apiVersion: v1
+data:
+  hosts: MTI3LjAuMC4xCWxvY2FsaG9zdAoxMjcuMC4xLjEJaG9zdDAxCgojIFRoZSBmb2xsb3dpbmcgbGluZXMgYXJlIGRlc2lyYWJsZSBmb3IgSVB2NiBjYXBhYmxlIGhvc3RzCjo6MSAgICAgbG9jYWxob3N0IGlwNi1sb2NhbGhvc3QgaXA2LWxvb3BiYWNrCmZmMDI6OjEgaXA2LWFsbG5vZGVzCmZmMDI6OjIgaXA2LWFsbHJvdXRlcnMKMTI3LjAuMC4xIGhvc3QwMQoxMjcuMC4wLjEgaG9zdDAxCjEyNy4wLjAuMSBob3N0MDEKMTI3LjAuMC4xIGNvbnRyb2xwbGFuZQoxNzIuMTcuMC4zNSBub2RlMDEKMTcyLjE3LjAuMjMgY29udHJvbHBsYW5lCg==
+kind: Secret
+metadata:
+  name: diver
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  volumes:
+  - name: diver
+    secret:
+      secretName: diver
+  containers:
+  - image: nginx
+    name: pod1
+    volumeMounts:
+      - name: diver
+        mountPath: /etc/diver
+Copy<br>Verify<br>kubectl exec pod1 -- cat /etc/diver/hosts
+Copy<br><br>From literal<br>
+k create secret  generic sec-a1 -n ns-secure --from-literal=credentials=445566<br>From files<br>
+k create secret  generic sec-a2 -n ns-secure --from-file=/etc/hosts<br>
+Check contents<br>
+echo 'MTI3LjAuMC4xIGxvY2FsaG9zdAoKIyBUaGUgZm9sbG93aW5nIGxpbmVzIGFyZSBkZXNpcmFibGUgZm9yIElQdjYgY2FwYWJsZSBob3N0cwo6OjEgaXA2LWxvY2FsaG9zdCBpcDYtbG9vcGJhY2sKZmUwMDo6MCBpcDYtbG9jYWxuZXQKZmYwMDo6MCBpcDYtbWNhc3RwcmVmaXgKZmYwMjo6MSBpcDYtYWxsbm9kZXMKZmYwMjo6MiBpcDYtYWxscm91dGVycwpmZjAyOjozIGlwNi1hbGxob3N0cwoxMjcuMC4wLjEgdWJ1bnR1CjEyNy4wLjAuMSBob3N0MDEKMTI3LjAuMC4xIGNvbnRyb2xwbGFuZQo=' | base64 -d<br>Note on Secrets<br>
+<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/cb91290b-c3f5-41a5-af2f-ec2666bf6da6" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/cb91290b-c3f5-41a5-af2f-ec2666bf6da6</a>]]></description><link>cks\minimise-microservice-vulnerabilities\secrets.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/Secrets.md</guid><pubDate>Wed, 21 Aug 2024 14:16:20 GMT</pubDate></item><item><title><![CDATA[Security Contexts]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/configure-pod-container/security-context/" target="_blank">https://kubernetes.io/docs/tasks/configure-pod-container/security-context/</a><br>Both at the pod or container levels<br>securityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+Copy<br>Run a container as non-root. Needs something like above to verify the user will not run as root or that the base Docker image is set to run as a different user than root.<br>securityContext:
+  runAsNonRoot: true
+Copy<br>At the pod level<br>securityContext:
+  capabilities:
+    add: ["NET_ADMIN", "SYS_TIME"]
+Copy<br><br>Privileged true or unprivileged(default) false pod. At the level of the pod or container (Not always e.g. sts only work at container)<br>It means user 0 (root) in container is mapped to user 0 (root) on host <br>securityContext:
+  privileged: true
+Copy<br>A command like sysctl kernel.hostname=hacker will now work!<br>A process can gain more privileges than its parent process<br>
+If true (default) cat /proc/1/status shows NoNewPrivs:0<br>securityContext:
+      allowPrivilegeEscalation: false
+Copy<br><br>securityContext:
+  readOnlyRootFilesystem: true
+Copy<br>This will probably require empytDir (<a data-tooltip-position="top" aria-label="https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes" rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/storage/ephemeral-volumes/#generic-ephemeral-volumes" target="_blank">generic ephemeral volumes</a>)<br>volumeMounts:
+    - mountPath: /cache
+      name: cache-volume
+  volumes:
+  - name: cache-volume
+    emptyDir:
+      sizeLimit: 500Mi
+Copy]]></description><link>cks\minimise-microservice-vulnerabilities\security-contexts.html</link><guid isPermaLink="false">CKS/Minimise Microservice Vulnerabilities/Security Contexts.md</guid><pubDate>Mon, 26 Aug 2024 13:19:54 GMT</pubDate></item><item><title><![CDATA[Audit Policy]]></title><description><![CDATA[<a class="tag" href="?query=tag:api-server" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#api-server</a> 
+ <br><a href=".?query=tag:api-server" class="tag" target="_blank" rel="noopener">#api-server</a><br>
+<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/" target="_blank">https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/</a><br><a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/tree/master/course-content/runtime-security/auditing" target="_blank">https://github.com/killer-sh/cks-course-environment/tree/master/course-content/runtime-security/auditing</a><br>in kube-apiserver.yaml<br>To have a new set of policies loaded, the API server should:<br>
+<br>have the current policy line commented out
+<br>wait till the API server restarts
+<br>add the new policy end comment out the line
+<br>wait till the API server restarts
+<br>spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --audit-log-path=/etc/kubernetes/audit-logs/audit.log
+    - --audit-log-maxsize=7
+    - --audit-log-maxbackup=2
+    - --audit-policy-file=/etc/kubernetes/audit-policy/policy.yaml
+Copy<br>volumeMounts:
+    - mountPath: /etc/kubernetes/audit-logs
+      name: audit-logs
+      readOnly: false
+    - mountPath: /etc/kubernetes/audit-policy/policy.yaml
+      name: audit
+      readOnly: true
+Copy<br>volumes:
+  - hostPath:
+      path: /etc/kubernetes/audit-logs
+      type: DirectoryOrCreate
+    name: audit-logs
+  - hostPath:
+      path: /etc/kubernetes/audit-policy/policy.yaml
+      type: File
+    name: audit
+Copy<br><br>
+<br>Stages:
+
+<br>RequestReceived
+<br>ResponseStarted
+<br>ResponseComplete
+<br>Panic
+
+
+<br>Level:
+
+<br>None
+<br>Metadata
+<br>Request
+<br>RequestResponse
+
+
+<br>Event content:
+
+<br>Resources
+<br>Verbs
+<br>UserGroups
+
+
+<br>Rule are checked from top to bottom in order<br>policy.yaml example<br># /etc/kubernetes/audit/policy.yaml
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+
+# log Secret resources audits, level Metadata
+- level: Metadata
+  resources:
+  - group: ""
+    resources: ["secrets"]
+
+# log node related audits, level RequestResponse
+- level: RequestResponse
+  userGroups: ["system:nodes"]
+
+# for everything else don't log anything
+- level: None
+- 
+Copy<br>
+<br>Nothing from get, watch and list
+<br>Nothing from events
+<br>Nothing from workers
+<br>Complete for secrets
+<br>apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - "RequestReceived"
+
+rules:
+# log no "read" actions
+- level: None
+  verbs: ["get", "watch", "list"]
+
+# log nothing regarding events
+- level: None
+  resources:
+  - group: "" # core
+    resources: ["events"]
+
+# log nothing coming from some groups
+- level: None
+  userGroups: ["system:nodes"]
+
+- level: RequestResponse
+  resources:
+  - group: ""
+    resources: ["secrets"]
+
+# for everything else log
+- level: Metadata
+Copy]]></description><link>cks\monitoring,-logging-and-runtime-security\audit-policy.html</link><guid isPermaLink="false">CKS/Monitoring, Logging and Runtime Security/Audit Policy.md</guid><pubDate>Tue, 03 Sep 2024 07:50:57 GMT</pubDate></item><item><title><![CDATA[Falco]]></title><description><![CDATA[<a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> 
+ <br><a href=".?query=tag:container" class="tag" target="_blank" rel="noopener">#container</a> <a href=".?query=tag:pod" class="tag" target="_blank" rel="noopener">#pod</a><br>
+Runtime security tool for detecting anomalous behavior.<br>
+Example: Alerts you if a container suddenly starts running unexpected processes.<br>
+Needs: Installation of Falco as a DaemonSet, rules configuration in YAML.<br>strace on steroids<br>
+<a rel="noopener" class="external-link" href="https://falco.org/docs/getting-started/falco-kubernetes-quickstart/" target="_blank">https://falco.org/docs/getting-started/falco-kubernetes-quickstart/</a><br>It typically works on a per node basis as a service or directly from terminal<br>
+systemctl status falco<br>It logs in /var/log/syslog<br>Default rules in /etc/falco/<br>falco.yaml
+falco_rules.local.yaml
+falco_rules.yaml
+k8s_audit_rules.yaml
+...
+Copy<br>Change a rule to a custom<br>
+grep -r "Some text from an exisiting rule" /etc/falco<br>To add fields to the output<br>
+<a rel="noopener" class="external-link" href="https://falco.org/docs/reference/rules/supported-fields/" target="_blank">https://falco.org/docs/reference/rules/supported-fields/</a><br>Enable file output in etc/falco/falco.yaml<br>file_output:
+  enabled: true
+  keep_alive: false
+  filename: /opt/security_incidents/alerts.log
+Copy<br><br>
+<br>Hot reload kill -1 $(cat /var/run/falco.pid)
+<br>Restart systemctl restart falco
+]]></description><link>cks\monitoring,-logging-and-runtime-security\falco.html</link><guid isPermaLink="false">CKS/Monitoring, Logging and Runtime Security/Falco.md</guid><pubDate>Thu, 01 Aug 2024 12:52:36 GMT</pubDate></item><item><title><![CDATA[Docker build]]></title><description><![CDATA[ 
+ <br>Only RUN, COPY and ADD will create a new layer<br>Given this image<br>FROM alpine:3.12.3
+
+RUN adduser -D -g '' appuser
+
+USER appuser
+
+CMD sh -c 'sleep 1d'
+Copy<br>image: docker.io/library/nginx (Registry . User Account . Image Repository)<br>We can build as (from within the folder)<br>
+docker build -t base-image .<br>Run<br>
+docker run --name c1 -d base-image<br>Destroy<br>
+docker rm c1 --force<br><br>From<br>FROM ubuntu
+RUN apt-get update
+RUN apt-get -y install curl
+ENV URL https://google.com/this-will-fail?secret-token=
+CMD ["sh", "-c", "curl --head $URL=2e064aad-3a90-4cde-ad86-16fad1f8943e"]
+Copy<br>Fix a specific base image version add :20.04<br>FROM ubuntu:20.04
+RUN apt-get update
+RUN apt-get -y install curl
+ENV URL https://google.com/this-will-fail?secret-token=
+CMD ["sh", "-c", "curl --head $URL=2e064aad-3a90-4cde-ad86-16fad1f8943e"]
+Copy<br>Ensure consistency at the apt-get caching by consolidating the apt lines in one layer<br>FROM ubuntu:20.04
+RUN apt-get update &amp;&amp; apt-get -y install curl
+ENV URL https://google.com/this-will-fail?secret-token=
+CMD ["sh", "-c", "curl --head $URL=2e064aad-3a90-4cde-ad86-16fad1f8943e"]
+Copy<br>Replace hardcode values by using arguments<br>FROM ubuntu:20.04
+RUN apt-get update &amp;&amp; apt-get -y install curl
+ENV URL https://google.com/this-will-fail?secret-token=
+CMD ["sh", "-c", "curl --head $URL$TOKEN$"]
+Copy<br>Then run the container as<br>podman run -e TOKEN=2e064aad-3a90-4cde-ad86-16fad1f8943e app
+Copy<br>Prevent Bash execution<br>FROM ubuntu:20.04
+RUN apt-get update &amp;&amp; apt-get -y install curl
+ENV URL https://google.com/this-will-fail?secret-token=
+RUN rm /usr/bin/bash
+CMD ["sh", "-c", "curl --head $URL$TOKEN$"]
+Copy<br><br>Multi-stage Docker image<br>
+<a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/tree/master/course-content/supply-chain-security/image-footprint" target="_blank">https://github.com/killer-sh/cks-course-environment/tree/master/course-content/supply-chain-security/image-footprint</a><br># build container stage 1
+FROM ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update &amp;&amp; apt-get install -y golang-go=2:1.13~1ubuntu2
+COPY app.go .
+RUN pwd
+RUN CGO_ENABLED=0 go build app.go
+
+# app container stage 2
+FROM alpine:3.12.0
+RUN addgroup -S appgroup &amp;&amp; adduser -S appuser -G appgroup -h /home/appuser
+RUN rm -rf /bin/*
+COPY --from=0 /app /home/appuser/
+USER appuser
+CMD ["/home/appuser/app"]
+Copy]]></description><link>cks\supply-chain-security\docker-build.html</link><guid isPermaLink="false">CKS/Supply Chain Security/Docker build.md</guid><pubDate>Tue, 03 Sep 2024 10:47:14 GMT</pubDate></item><item><title><![CDATA[ImagePolicyWebhook]]></title><description><![CDATA[<a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> 
+ <br><a href=".?query=tag:admissioncontroller" class="tag" target="_blank" rel="noopener">#admissioncontroller</a><br>
+Validating admission plugin<br>This is a type of <a data-href="Dynamic Admission Control" href="cks\minimise-microservice-vulnerabilities\dynamic-admission-control.html" class="internal-link" target="_self" rel="noopener">Dynamic Admission Control</a><br>To enable it<br>
+kube-apiserver --enable-admission-plugins=NodeRestriction,ImagePolicyWebhook<br>It requires a kubeconfig file and the relative volume mount in the kube-api manifest file.<br>The kubeconfig file is needed especially if the webhook server is running outside of the Kubernetes cluster or needs to authenticate and communicate securely with the Kubernetes API server.<br>--admission-control-config-file=/etc/kubernetes/policywebhook/admission_config.json
+...
+- mountPath: /etc/kubernetes/policywebhook
+ name: k8s-admission
+ readOnly: true
+...
+- hostPath:
+   path: /etc/kubernetes/policywebhook
+   type: DirectoryOrCreate
+ name: k8s-admission
+Copy<br>Contents of admission_config.json<br>"defaultAllow": false will stop pods to run if the webhook service is down<br>{
+   "apiVersion": "apiserver.config.k8s.io/v1",
+   "kind": "AdmissionConfiguration",
+   "plugins": [
+      {
+         "name": "ImagePolicyWebhook",
+         "configuration": {
+            "imagePolicy": {
+               "kubeConfigFile": "/etc/kubernetes/policywebhook/kubeconf",
+               "allowTTL": 100,
+               "denyTTL": 50,
+               "retryBackoff": 500,
+               "defaultAllow": false
+            }
+         }
+      }
+   ]
+}
+Copy<br>kubeconf file<br>apiVersion: v1
+kind: Config
+
+# clusters refers to the remote service.
+clusters:
+- cluster:
+    certificate-authority: /etc/kubernetes/policywebhook/external-cert.pem  # CA for verifying the remote service.
+    server: https://localhost:1234  # URL of remote service to query. Must use 'https'.
+  name: image-checker
+
+contexts:
+- context:
+    cluster: image-checker
+    user: api-server
+  name: image-checker
+current-context: image-checker
+preferences: {}
+
+# users refers to the API server's webhook configuration.
+users:
+- name: api-server
+  user:
+    client-certificate: /etc/kubernetes/policywebhook/apiserver-client-cert.pem     # cert for the webhook admission controller to use
+    client-key:  /etc/kubernetes/policywebhook/apiserver-client-key.pem             # key matching the cert
+Copy<br>This is a similar mechanism to <a data-href="OPA Gatekeeper#whitelist trusted images" href="cks\minimise-microservice-vulnerabilities\opa-gatekeeper.html#whitelist_trusted_images" class="internal-link" target="_self" rel="noopener">OPA Gatekeeper &gt; whitelist trusted images</a>]]></description><link>cks\supply-chain-security\imagepolicywebhook.html</link><guid isPermaLink="false">CKS/Supply Chain Security/ImagePolicyWebhook.md</guid><pubDate>Tue, 03 Sep 2024 16:51:21 GMT</pubDate></item><item><title><![CDATA[Kubesec]]></title><description><![CDATA[<a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:deployment" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#deployment</a> <a class="tag" href="?query=tag:service" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#service</a> 
+ <br><a href=".?query=tag:pod" class="tag" target="_blank" rel="noopener">#pod</a> <a href=".?query=tag:deployment" class="tag" target="_blank" rel="noopener">#deployment</a> <a href=".?query=tag:service" class="tag" target="_blank" rel="noopener">#service</a><br>
+Kubernetes resource security assessment tool.<br>
+Example: Analyzes your Kubernetes manifests and reports any security risks.<br>
+Needs: Standalone tool or Kubernetes Admission Controller, scans YAML manifests.]]></description><link>cks\supply-chain-security\kubesec.html</link><guid isPermaLink="false">CKS/Supply Chain Security/Kubesec.md</guid><pubDate>Thu, 01 Aug 2024 12:53:04 GMT</pubDate></item><item><title><![CDATA[Private Registry]]></title><description><![CDATA[ 
+ <br>In a deployment or pod where an authenticated repository is to be used<br>...
+spec:
+      containers:
+      - image: myprivateregistry.com:5000/nginx:alpine
+...
+Copy<br>Credentials need to be provided via a secret<br>
+kubectl create secret docker-registry my-secret --docker-server=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-password=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL<br>Which is then used as<br>...
+spec:
+      containers:
+      - image: myprivateregistry.com:5000/nginx:alpine
+      imagePullSecrets:
+      - name: my-secret
+...
+Copy]]></description><link>cks\supply-chain-security\private-registry.html</link><guid isPermaLink="false">CKS/Supply Chain Security/Private Registry.md</guid><pubDate>Wed, 28 Aug 2024 11:27:22 GMT</pubDate></item><item><title><![CDATA[Static Analysis]]></title><description><![CDATA[ 
+ <br>
+<br>Conftest<br>
+docker run -rm -v $(pwd):/project instrumenta/conftest test &lt;yamlFile&gt;
+<br><a data-href="Kubesec" href="cks\supply-chain-security\kubesec.html" class="internal-link" target="_self" rel="noopener">Kubesec</a>
+<br><a data-href="Docker build" href="cks\supply-chain-security\docker-build.html" class="internal-link" target="_self" rel="noopener">Docker build</a> security best practices<br>
+<a rel="noopener" class="external-link" href="https://docs.docker.com/build/building/best-practices/" target="_blank">https://docs.docker.com/build/building/best-practices/</a><br>
+<a rel="noopener" class="external-link" href="https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html" target="_blank">https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html</a>]]></description><link>cks\supply-chain-security\static-analysis.html</link><guid isPermaLink="false">CKS/Supply Chain Security/Static Analysis.md</guid><pubDate>Tue, 03 Sep 2024 10:59:10 GMT</pubDate></item><item><title><![CDATA[Trivy]]></title><description><![CDATA[<a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> 
+ <br>trivy <a href=".?query=tag:container" class="tag" target="_blank" rel="noopener">#container</a><br>
+Vulnerability scanner for containers and Kubernetes.<br>
+Example: Scans container images to find known vulnerabilities in software packages.<br>
+Needs: Standalone CLI tool or integrated into CI/CD pipelines, scans container images.<br><a rel="noopener" class="external-link" href="https://github.com/aquasecurity/trivy#docker" target="_blank">https://github.com/aquasecurity/trivy#docker</a><br>Run a scan for nginx latest<br>
+docker run ghcr.io/aquasecurity/trivy:latest image nginx:latest<br>For a specific version<br>
+docker run ghcr.io/aquasecurity/trivy:latest image nginx:1.19.1-alpine-perl<br>Check a specific vulnerability<br>
+docker run ghcr.io/aquasecurity/trivy:latest image httpd:2.4.39-alpine | grep CVE-2016-9841<br>If Trivy is installed it can be run as<br>trivy image nginx:1.19.1-alpine-perl | grep CVE-2021-28831
+
+trivy image --severity CRITICAL kodekloud/webapp-delayed-start
+
+trivy k8s --include-namespaces delta --report summary
+```
+
+`kubectl run -i --rm trivy --image=aquasec/trivy --command -- sh -c "trivy image nginx:alpine --severity=CRITICAL | grep Total:"`
+Copy]]></description><link>cks\supply-chain-security\trivy.html</link><guid isPermaLink="false">CKS/Supply Chain Security/Trivy.md</guid><pubDate>Wed, 28 Aug 2024 16:01:20 GMT</pubDate></item><item><title><![CDATA[AppArmor]]></title><description><![CDATA[<a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> 
+ <br><a href=".?query=tag:pod" class="tag" target="_blank" rel="noopener">#pod</a> <a href=".?query=tag:container" class="tag" target="_blank" rel="noopener">#container</a><br>
+Linux kernel security module for access control.<br>
+Example: Restricts a container's ability to access certain files or network resources.<br>
+It is currently in Beta for K8s<br>
+Needs: AppArmor profiles, Kubernetes pod securityContext section in YAML.<br>Default directory /etc/apparmor.d/<br>Each node has to have a copy of the profile<br>aa-status
+aa-genprof
+aa-complain
+aa-enforce
+aa-logprof
+Copy<br><br>apt-get install apparmor-utils<br>e.g. aa-genprof curl then F. This will block curl from doing anything<br>
+aa-logprof to allow curl again on all or certain actions<br><br>Load a profile apparmor_parser -q /etc/apparmor.d/usr.sbin.nginx<br>Example profile<br>#include &lt;tunables/global&gt;
+
+profile custom-nginx flags=(attach_disconnected,mediate_deleted) {
+  #include &lt;abstractions/base&gt;
+
+  network inet tcp,
+  network inet udp,
+  network inet icmp,
+
+  deny network raw,
+
+  deny network packet,
+
+  file,
+  umount,
+
+  deny /bin/** wl,
+  deny /boot/** wl,
+  deny /dev/** wl,
+  deny /etc/** wl,
+  deny /home/** wl,
+  deny /lib/** wl,
+  deny /lib64/** wl,
+  deny /media/** wl,
+  deny /mnt/** wl,
+  deny /opt/** wl,
+  deny /proc/** wl,
+  deny /root/** wl,
+  deny /sbin/** wl,
+  deny /srv/** wl,
+  deny /tmp/** wl,
+  deny /sys/** wl,
+  deny /usr/** wl,
+
+  audit /** w,
+
+  /var/run/nginx.pid w,
+
+  /usr/sbin/nginx ix,
+
+  deny /bin/dash mrwklx,
+  deny /bin/sh mrwklx,
+  deny /usr/bin/top mrwklx,
+
+
+  capability chown,
+  capability dac_override,
+  capability setuid,
+  capability setgid,
+  capability net_bind_service,
+
+  deny @{PROC}/{*,**^[0-9*],sys/kernel/shm*} wkx,
+  deny @{PROC}/sysrq-trigger rwklx,
+  deny @{PROC}/mem rwklx,
+  deny @{PROC}/kmem rwklx,
+  deny @{PROC}/kcore rwklx,
+  deny mount,
+  deny /sys/[^f]*/** wklx,
+  deny /sys/f[^s]*/** wklx,
+  deny /sys/fs/[^c]*/** wklx,
+  deny /sys/fs/c[^g]*/** wklx,
+  deny /sys/fs/cg[^r]*/** wklx,
+  deny /sys/firmware/efi/efivars/** rwklx,
+  deny /sys/kernel/security/** rwklx,
+}
+Copy<br>Example to restrict an additional folder deny /usr/share/nginx/html/restricted/* rw, <br>Pod definition<br>Annotations are no longer needed as of v1.30<br>So this<br>container.apparmor.security.beta.kubernetes.io/&lt;container_name&gt;: localhost/&lt;profile_name&gt;
+Copy<br>is replaced within the container as<br>securityContext:
+  appArmorProfile:
+    type: &lt;profile_type&gt;
+    localhostProfile: &lt;profile_name&gt;
+Copy<br>apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    container.apparmor.security.beta.kubernetes.io/nginx: localhost/restricted-nginx
+  labels:
+    run: nginx
+  name: nginx
+  namespace: default
+  spec:
+  containers:
+  - image: nginx:alpine
+    imagePullPolicy: IfNotPresent
+    name: nginx
+    resources: {}
+    securityContext:
+      appArmorProfile:
+        localhostProfile: restricted-nginx
+        type: Localhost
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: test-volume
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-nqmb2
+      readOnly: true
+Copy]]></description><link>cks\system-hardening\apparmor.html</link><guid isPermaLink="false">CKS/System Hardening/AppArmor.md</guid><pubDate>Fri, 30 Aug 2024 15:32:58 GMT</pubDate></item><item><title><![CDATA[Disable open ports]]></title><description><![CDATA[ 
+ <br>Find process<br>netstat -tulnap | grep 1234 If not present apt install net-tools<br>
+or<br>
+lsof -i :1234<br>Find its path<br>
+ls -l /proc/&lt;ID&gt;/exe This returns the path of the file referenced by this symbolic link e.g. /usr/bin/app1<br>Kill process<br>
+kill &lt;ID&gt; or use kill -9 &lt;ID&gt;<br>Remove the file<br>
+rm /usr/bin/app1]]></description><link>cks\system-hardening\disable-open-ports.html</link><guid isPermaLink="false">CKS/System Hardening/Disable open ports.md</guid><pubDate>Wed, 31 Jul 2024 17:01:38 GMT</pubDate></item><item><title><![CDATA[Seccomp]]></title><description><![CDATA[<a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> 
+ <br><a href=".?query=tag:container" class="tag" target="_blank" rel="noopener">#container</a> <a href=".?query=tag:pod" class="tag" target="_blank" rel="noopener">#pod</a><br>
+Filters system calls for container security.<br>
+Example: Blocks a container from making potentially harmful system calls to the kernel.<br>
+Needs: Seccomp profiles, Kubernetes pod securityContext section in YAML.<br>
+strace ls /root shows what <a data-href="Syscalls" href="cks\system-hardening\syscalls.html" class="internal-link" target="_self" rel="noopener">Syscalls</a> are made<br>Default profile location /var/lib/kubelet/seccomp/<br>Each node has to have a copy of the profile<br>Example pod seccomp profile<br>apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx
+  name: audit-nginx
+spec:
+  securityContext:
+    seccompProfile:
+      type: Localhost
+      localhostProfile: profiles/audit.json
+  containers:
+  - image: nginx
+    name: nginx
+Copy<br>Example audit profile<br>{
+    "defaultAction": "SCMP_ACT_LOG"
+}
+Copy<br>Example white-list seccomp profile<br>{
+    "defaultAction": "SCMP_ACT_ERRNO",
+    "architectures": [
+        "SCMP_ARCH_X86_64",
+        "SCMP_ARCH_X86",
+        "SCMP_ARCH_X32"
+    ],
+    "syscalls": [
+        {
+            "names": [
+                "accept4",
+                "epoll_wait",
+                "pselect6",
+                "futex",
+                "madvise",
+                "epoll_ctl",
+                "getsockname",
+                "setsockopt",
+                "vfork",
+                "mmap",
+                "read",
+                "write",
+                "close",
+                "arch_prctl",
+                "sched_getaffinity",
+                "munmap",
+                "brk",
+                "rt_sigaction",
+                "rt_sigprocmask",
+                "sigaltstack",
+                "gettid",
+                "clone",
+                "bind",
+                "socket",
+                "openat",
+                "readlinkat",
+                "exit_group",
+                "epoll_create1",
+                "listen",
+                "rt_sigreturn",
+                "sched_yield",
+                "clock_gettime",
+                "connect",
+                "dup2",
+                "epoll_pwait",
+                "execve",
+                "exit",
+                "fcntl",
+                "getpid",
+                "getuid",
+                "ioctl",
+                "mprotect",
+                "nanosleep",
+                "open",
+                "poll",
+                "recvfrom",
+                "sendto",
+                "set_tid_address",
+                "setitimer",
+                "writev",
+                "fstatfs",
+                "getdents64"
+            ],
+            "action": "SCMP_ACT_ALLOW"
+        }
+    ]
+}
+Copy]]></description><link>cks\system-hardening\seccomp.html</link><guid isPermaLink="false">CKS/System Hardening/Seccomp.md</guid><pubDate>Fri, 30 Aug 2024 15:32:54 GMT</pubDate></item><item><title><![CDATA[SSH hardening]]></title><description><![CDATA[ 
+ <br>
+<br>Generate SSH Key Pair (first more modern)
+<br>ssh-keygen -t ed25519 -C "your_email@example.com"
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+Copy<br>
+<br>ssh into&nbsp;node01&nbsp;host from&nbsp;controlplane&nbsp;host
+<br>ssh node01<br>
+<br>Create user&nbsp;jim&nbsp;on&nbsp;node01&nbsp;host
+<br>adduser jim<br>
+<br>Back to&nbsp;controlplane&nbsp;host and copy ssh public key
+<br>ssh-copy-id -i ~/.ssh/id_rsa.pub jim@node01<br>
+<br>Test ssh access from&nbsp;controlplane&nbsp;host
+<br>ssh jim@node01<br><br>Disable root login and password authentication<br>
+in /etc/ssh/sshd_config<br>...
+PasswordAuthentication no
+PermitRootLogin no
+...
+Copy<br>service sshd restart<br><br>in /etc/sudoers (remember to chmod 644 and back to 440)<br>jim   ALL=(ALL:ALL) ALL Will allow the user to use sudo<br>
+jim ALL=(ALL) NOPASSWD:ALL Allow the user to not need sudo command<br>Groups are indicated with a %<br>
+%admin ALL=(ALL) ALL]]></description><link>cks\system-hardening\ssh-hardening.html</link><guid isPermaLink="false">CKS/System Hardening/SSH hardening.md</guid><pubDate>Mon, 02 Sep 2024 09:54:10 GMT</pubDate></item><item><title><![CDATA[Syscalls]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://man7.org/linux/man-pages/man2/syscalls.2.html" target="_blank">https://man7.org/linux/man-pages/man2/syscalls.2.html</a><br>To map Linux Syscalls we use strace<br>strace kill -9 1234
+strace kill -15 1234
+strace uname
+strace nc -l -p 8080
+Copy<br>Check an existing PID e.g. kube-apiserver<br>ps -ef | grep kube-api
+strace -p 2149 -f
+strace -p 2149 -f -cw
+Copy<br>strace touch /tmp/error.log
+pidof etcd
+strace -p 3596
+Copy]]></description><link>cks\system-hardening\syscalls.html</link><guid isPermaLink="false">CKS/System Hardening/Syscalls.md</guid><pubDate>Wed, 07 Aug 2024 14:43:03 GMT</pubDate></item><item><title><![CDATA[Tracee]]></title><description><![CDATA[ 
+ <br>Below Tracee has been used with an Ubuntu system. The -v options are OS dipendent<br>Trace syscalls for a specific command<br>docker run --name tracee --rm --privileged --pid=host \
+-v /lib/modules/:/lib/modules/:ro -v /usr/src:/usr/src:ro \
+-v /tmp/tracee:/tmp/tracee aquasec/tracee:0.4.0 --trace comm=ls
+Copy<br>Trace syscalls for all new process ID<br>sudo docker run --name tracee --rm --privileged --pid=host \
+-v /lib/modules/:/lib/modules/:ro -v /usr/src:/usr/src:ro \
+-v /tmp/tracee:/tmp/tracee aquasec/tracee:0.4.0 --trace pid=new
+Copy<br>Trace syscalls for new containers<br>sudo docker run --name tracee --rm --privileged --pid=host \
+-v /lib/modules/:/lib/modules/:ro -v /usr/src:/usr/src:ro \
+-v /tmp/tracee:/tmp/tracee aquasec/tracee:0.4.0 --trace container=new
+Copy]]></description><link>cks\system-hardening\tracee.html</link><guid isPermaLink="false">CKS/System Hardening/Tracee.md</guid><pubDate>Wed, 07 Aug 2024 14:42:23 GMT</pubDate></item><item><title><![CDATA[UFW Firewall]]></title><description><![CDATA[ 
+ <br>Refer to the man for examples<br>systemctl status ufw
+ufw status
+
+ufw status numbered
+
+ufw enable
+
+ufw reset
+
+ufw allow 1000:2000/tcp
+
+ufw allow 22/tcp
+
+ufw allow from 135.22.65.0/24 to any port 9090 proto tcp
+Copy]]></description><link>cks\system-hardening\ufw-firewall.html</link><guid isPermaLink="false">CKS/System Hardening/UFW Firewall.md</guid><pubDate>Fri, 30 Aug 2024 15:56:06 GMT</pubDate></item><item><title><![CDATA[Certified Kubernetes Security Specialist]]></title><description><![CDATA[<a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:etcd" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#etcd</a> <a class="tag" href="?query=tag:api-server" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#api-server</a> <a class="tag" href="?query=tag:service-account" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#service-account</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:api-server" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#api-server</a> <a class="tag" href="?query=tag:api-server" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#api-server</a> <a class="tag" href="?query=tag:rbac" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#rbac</a> <a class="tag" href="?query=tag:kubelet" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#kubelet</a> <a class="tag" href="?query=tag:kube-dashboard" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#kube-dashboard</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:service" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#service</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:service" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#service</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:node" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#node</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:image" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#image</a> <a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> <a class="tag" href="?query=tag:secret" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#secret</a> <a class="tag" href="?query=tag:configmap" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#configmap</a> <a class="tag" href="?query=tag:etcd" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#etcd</a> <a class="tag" href="?query=tag:etcd" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#etcd</a> <a class="tag" href="?query=tag:image" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#image</a> <a class="tag" href="?query=tag:image" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#image</a> <a class="tag" href="?query=tag:image" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#image</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:deployment" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#deployment</a> <a class="tag" href="?query=tag:service" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#service</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> <a class="tag" href="?query=tag:deployment" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#deployment</a> <a class="tag" href="?query=tag:replicaset" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#replicaset</a> <a class="tag" href="?query=tag:admissioncontroller" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#admissioncontroller</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:nodes" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#nodes</a> <a class="tag" href="?query=tag:pod" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#pod</a> <a class="tag" href="?query=tag:container" style="background-color: rgb(4, 108, 116); color: white; font-weight: 700; border: none; border-radius: 1em; padding: 0.2em 0.5em;">#container</a> 
+ <br><br><br><br><br><br><br><br><br><br>]]></description><link>cks\certified-kubernetes-security-specialist.html</link><guid isPermaLink="false">CKS/Certified Kubernetes Security Specialist.md</guid><pubDate>Sun, 08 Sep 2024 08:57:30 GMT</pubDate></item><item><title><![CDATA[Cheat-sheet]]></title><description><![CDATA[ 
+ <br>docker container prune
+docker system prune
+
+docker run --name=c1 base-image -d
+docker exec c1 ps
+docker stop c1
+docker rm c1 --force
+
+docker run -d -p HOST_PORT:CONTAINER_PORT nginx
+docker run -d -p 8080:80 nginx
+Copy]]></description><link>docker\cheat-sheet.html</link><guid isPermaLink="false">Docker/Cheat-sheet.md</guid><pubDate>Wed, 04 Sep 2024 08:50:52 GMT</pubDate></item><item><title><![CDATA[Docker Share PID]]></title><description><![CDATA[ 
+ <br>From <a data-href="Killer-sh - CKS Scenarios" href="cks\exam\killer-sh-cks-scenarios.html" class="internal-link" target="_self" rel="noopener">Killer-sh - CKS Scenarios</a><br>docker run --name app1 -d nginx:alpine sleep infinity
+docker exec app1 ps aux
+docker run --name app3 -d nginx:alpine sleep infinity
+docker run --name app2 --pid=container:app1 -d nginx:alpine sleep infinity
+docker exec app2 ps aux
+docker exec app1 ps aux
+docker exec app3 ps aux
+Copy<br>controlplane $ docker exec app2 ps aux
+PID   USER     TIME  COMMAND
+    1 root      0:00 sleep infinity
+   27 root      0:00 sleep infinity
+   32 root      0:00 ps aux
+controlplane $ docker exec app1 ps aux
+PID   USER     TIME  COMMAND
+    1 root      0:00 sleep infinity
+   27 root      0:00 sleep infinity
+   37 root      0:00 ps aux
+controlplane $ docker exec app3 ps aux
+PID   USER     TIME  COMMAND
+    1 root      0:00 sleep infinity
+    7 root      0:00 ps aux
+Copy]]></description><link>docker\docker-share-pid.html</link><guid isPermaLink="false">Docker/Docker Share PID.md</guid><pubDate>Wed, 07 Aug 2024 14:56:11 GMT</pubDate></item><item><title><![CDATA[Cluster Networking]]></title><description><![CDATA[ 
+ <br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/cluster-administration/networking/#:~:text=Kubernetes%20IP%20address%20ranges&amp;text=The%20network%20plugin%20is%20configured,assign%20IP%20addresses%20to%20Nodes" target="_blank">https://kubernetes.io/docs/concepts/cluster-administration/networking/#:~:text=Kubernetes%20IP%20address%20ranges&amp;text=The%20network%20plugin%20is%20configured,assign%20IP%20addresses%20to%20Nodes</a>.<br><img alt="kubernetes-cluster-network_1_.png" src="kubernetes\networking\kubernetes-cluster-network_1_.png"><br>
+<br>Nodes  kubectl get nodes -o wide 
+<br>NAME           STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+controlplane   Ready    control-plane   2d15h   v1.30.0   172.30.1.2    &lt;none&gt;        Ubuntu 20.04.5 LTS   5.4.0-131-generic   containerd://1.7.13
+Copy<br>The kubelet or the cloud-controller-manager is configured to assign IP addresses to Nodes.<br>
+<br>Services `kubectl get service
+<br>NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1       &lt;none&gt;        443/TCP   2d15h
+nginx        ClusterIP   10.105.22.115   &lt;none&gt;        80/TCP    6s
+Copy<br>The kube-apiserver is configured to assign IP addresses to Services.<br>
+cat /etc/kubernetes/manifests/kube-apiserver.yaml<br>...
+- --service-cluster-ip-range=10.96.0.0/12
+...
+Copy<br>
+<br>Pods Kubectl get pods -o wide
+<br>NAME    READY   STATUS    RESTARTS   AGE   IP           NODE     NOMINATED NODE   READINESS GATES
+nginx   1/1     Running   0          27s   10.244.1.2   node01   &lt;none&gt;           &lt;none&gt;
+Copy<br>The network plugin is configured to assign IP addresses to Pods.<br>
+ip -4 address<br>1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: flannel.1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc noqueue state UNKNOWN group default 
+    inet 10.244.0.0/32 brd 10.244.0.0 scope global flannel.1
+       valid_lft forever preferred_lft forever
+3: cni0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc noqueue state UP group default qlen 1000
+    inet 10.244.0.1/24 brd 10.244.0.255 scope global cni0
+       valid_lft forever preferred_lft forever
+Copy<br>Other approach<br>
+kubectl get configmap kubeadm-config -n kube-system -o yaml<br>...
+networking:
+      dnsDomain: cluster.local
+      podSubnet: 10.244.0.0/16
+      serviceSubnet: 10.96.0.0/12
+...
+Copy]]></description><link>kubernetes\networking\cluster-networking.html</link><guid isPermaLink="false">Kubernetes/Networking/Cluster Networking.md</guid><pubDate>Sun, 07 Jul 2024 08:09:07 GMT</pubDate><enclosure url="kubernetes\networking\kubernetes-cluster-network_1_.png" length="0" type="image/png"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;kubernetes\networking\kubernetes-cluster-network_1_.png&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[DNS]]></title><description><![CDATA[ 
+ <br>in app namespace<br>
+The service<br>web-service.apps
+web-service.apps.svc
+web-service.apps.svc.cluster.local
+Copy<br>The pod<br>10-244-2-5.apps
+10-244-2-5.apps.pod
+10-244-2-5.apps.pod.cluster.local
+Copy<br>kubectl run -i --tty --rm debug --image=busybox --restart=Never -- nslookup &lt;hostname&gt;]]></description><link>kubernetes\networking\dns.html</link><guid isPermaLink="false">Kubernetes/Networking/DNS.md</guid><pubDate>Wed, 04 Sep 2024 14:14:07 GMT</pubDate></item><item><title><![CDATA[Commands and Args]]></title><description><![CDATA[ 
+ <br>Declarative<br>spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+	command: [ "sleep", "5000" ]
+Copy<br>spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu	
+	command:
+	  - "sleep"
+	  - "5000"
+Copy<br>spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+	command: [ "sleep" ]
+	args: [ "5000" ]
+Copy<br>spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+    command:
+    - sh
+    - -c
+    - sleep 5000
+Copy<br>spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+    command: ["sh", "-c"]
+    args: ["sleep 5000"]
+Copy<br>Imperative<br>k run ubuntu --image=ubuntu --command -- sleep 5000<br>k run ubuntu --image=ubuntu --command -- sh -c 'sleep 5000']]></description><link>kubernetes\pods\commands-and-args.html</link><guid isPermaLink="false">Kubernetes/Pods/Commands and Args.md</guid><pubDate>Mon, 29 Jul 2024 11:28:38 GMT</pubDate></item><item><title><![CDATA[External resources]]></title><description><![CDATA[ 
+ <br>
+<br>Linux Network Namespace and five of its use cases <a rel="noopener" class="external-link" href="https://ramesh-sahoo.medium.com/linux-network-namespace-and-five-use-cases-using-various-methods-f45b1ec5db8f" target="_blank">https://ramesh-sahoo.medium.com/linux-network-namespace-and-five-use-cases-using-various-methods-f45b1ec5db8f</a>
+<br>kube-ps1: Kubernetes prompt for bash and zsh <a rel="noopener" class="external-link" href="https://github.com/jonmosco/kube-ps1" target="_blank">https://github.com/jonmosco/kube-ps1</a>
+<br>kubectl-aliases <a rel="noopener" class="external-link" href="https://github.com/ahmetb/kubectl-aliases?tab=readme-ov-file" target="_blank">https://github.com/ahmetb/kubectl-aliases?tab=readme-ov-file</a>
+<br>CKAD + CKA + CKS: The Kubernetes Certification Trilogy <a rel="noopener" class="external-link" href="https://github.com/Paken/presentations/tree/main/k8scertificationtrilogy" target="_blank">https://github.com/Paken/presentations/tree/main/k8scertificationtrilogy</a>
+]]></description><link>kubernetes\external-resources.html</link><guid isPermaLink="false">Kubernetes/External resources.md</guid><pubDate>Mon, 29 Jul 2024 10:30:08 GMT</pubDate></item><item><title><![CDATA[Kubectl]]></title><description><![CDATA[ 
+ <br><br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/kubectl/quick-reference/#kubectl-autocomplete" target="_blank">https://kubernetes.io/docs/reference/kubectl/quick-reference/#kubectl-autocomplete</a><br><br>This requires <a data-href="Bash completion" href="linux\bash-completion.html" class="internal-link" target="_self" rel="noopener">Bash completion</a><br>source &lt;(kubectl completion bash) # set up autocomplete in bash into the current shell, bash-completion package should be installed first.
+echo "source &lt;(kubectl completion bash)" &gt;&gt; ~/.bashrc # add autocomplete permanently to your bash shell.
+Copy<br>alias k=kubectl
+complete -o default -F __start_kubectl k
+Copy<br><br>cat &lt;&lt;EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: readonly-user
+  namespace: kubernetes-dashboard
+EOF
+Copy]]></description><link>kubernetes\kubectl.html</link><guid isPermaLink="false">Kubernetes/Kubectl.md</guid><pubDate>Tue, 20 Aug 2024 08:40:19 GMT</pubDate></item><item><title><![CDATA[Webhook auth service]]></title><description><![CDATA[ 
+ <br>from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/authorize', methods=['POST'])
+def authorize():
+    # For simplicity, allow all requests. You can modify this logic to enforce policies.
+    return jsonify({"apiVersion": "authorization.k8s.io/v1",
+                    "kind": "SubjectAccessReview",
+                    "status": {"allowed": True}})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8443, ssl_context=('webhook-authz-cert.pem', 'webhook-authz-key.pem'))
+Copy<br>There is a problem in the certificate creation in that it needs a CA and the following has to be updated<br>san.cnf<br>[ req ]
+distinguished_name = req_distinguished_name
+req_extensions = req_ext
+x509_extensions = v3_req
+prompt = no
+
+[ req_distinguished_name ]
+CN = webhook-service.kube-system.svc
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ v3_req ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = webhook-service.kube-system.svc
+DNS.2 = webhook-service.kube-system.svc.cluster.local
+Copy<br>openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout webhook-authz.key -out webhook-authz.crt -config san.cnf<br>kubectl create secret tls webhook-authz-certs \
+  --cert=webhook-authz-cert.pem \
+  --key=webhook-authz-key.pem \
+  -n kube-system
+Copy<br>FROM python:3.8-slim
+WORKDIR /app
+COPY . /app
+RUN pip install flask
+CMD ["python", "webhook.py"]
+Copy<br>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-authz
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-authz
+  template:
+    metadata:
+      labels:
+        app: webhook-authz
+    spec:
+      containers:
+      - name: webhook-authz
+        image: &lt;your-docker-registry&gt;/webhook-authz:v1
+        ports:
+        - containerPort: 8443
+          name: https
+---
+#webhook-config.yaml
+apiVersion: v1
+kind: Config
+clusters:
+- name: webhook
+  cluster:
+    certificate-authority: /etc/kubernetes/pki/webhook-ca.crt
+    server: https://webhook-service.kube-system.svc:8443/authorize
+users:
+- name: webhook
+  user:
+    client-certificate: /etc/kubernetes/pki/webhook-authz-cert.pem
+    client-key: /etc/kubernetes/pki/webhook-authz-key.pem
+contexts:
+- name: webhook
+  context:
+    cluster: webhook
+    user: webhook
+current-context: webhook
+Copy<br><br>cp webhook-client.crt webhook-client.key /etc/kubernetes/pki<br>/etc/kubernetes/manifests/kube-apiserver.yaml
+- --authorization-mode=Webhook
+- --authorization-webhook-config-file=/etc/kubernetes/webhook-config.yaml
+...
+ volumeMounts:
+    - mountPath: /etc/kubernetes/webhook-config.yaml
+      name: webhook
+      readOnly: true
+...
+volumes:
+  - name: webhook
+    hostPath:
+      path: /etc/kubernetes/webhook-config.yaml
+      type: File
+Copy]]></description><link>kubernetes\webhook-auth-service.html</link><guid isPermaLink="false">Kubernetes/Webhook auth service.md</guid><pubDate>Thu, 05 Sep 2024 06:41:26 GMT</pubDate></item><item><title><![CDATA[Bash completion]]></title><description><![CDATA[ 
+ <br>In WSL Debian<br>sudo apt install bash-completion<br>source /etc/bash_completion]]></description><link>linux\bash-completion.html</link><guid isPermaLink="false">Linux/Bash completion.md</guid><pubDate>Thu, 25 Jul 2024 08:06:41 GMT</pubDate></item><item><title><![CDATA[Starship terminal]]></title><description><![CDATA[ 
+ <br>Install Nerd Fonts<br>
+<a rel="noopener" class="external-link" href="https://www.nerdfonts.com/" target="_blank">https://www.nerdfonts.com/</a><br>
+Needs:  sudo apt install fontconfig<br>
+<br>Download a <a data-tooltip-position="top" aria-label="http://nerdfonts.com/" rel="noopener" class="external-link" href="http://nerdfonts.com/" target="_blank">Nerd Font</a>
+<br>Unzip and copy to ~/.fonts or &nbsp;~/.local/share/fonts
+<br>Run the command fc-cache -fv to manually rebuild the font cache
+<br>WSL  the fonts need to be installed in Windows too.
+To install within Windows simply select them all and right-click -&gt; install<br>
+In Terminal -&gt;  Settings -&gt; Profile (e.g. Debian) -&gt; Apperance -&gt; Font face -&gt; FontName (e.g. AnonymicePro Nerd Font)
+<br>Install Starship<br>
+<a rel="noopener" class="external-link" href="https://starship.rs/guide/" target="_blank">https://starship.rs/guide/</a><br>curl -sS https://starship.rs/install.sh | sh
+echo 'eval "$(starship init bash)"' | tee -a ~/.bashrc
+source ~/.bashrc
+Copy<br>Configure a minimal setup<br>mkdir -p ~/.config &amp;&amp; touch ~/.config/starship.toml
+export STARSHIP_CONFIG=~/example/non/default/path/starship.toml
+Copy<br>Install Starship presets<br>
+<a rel="noopener" class="external-link" href="https://starship.rs/presets/" target="_blank">https://starship.rs/presets/</a><br>starship preset pastel-powerline -o ~/.config/starship.toml
+Copy<br>Test with<br>echo -e "\xf0\x9f\x90\x8d"
+echo -e "\xee\x82\xa0"
+Copy<br>The first line should produce a&nbsp;<a data-tooltip-position="top" aria-label="https://emojipedia.org/snake/" rel="noopener" class="external-link" href="https://emojipedia.org/snake/" target="_blank">snake emoji</a>, while the second should produce a&nbsp;<a data-tooltip-position="top" aria-label="https://github.com/ryanoasis/powerline-extra-symbols#glyphs" rel="noopener" class="external-link" href="https://github.com/ryanoasis/powerline-extra-symbols#glyphs" target="_blank">powerline branch symbol (e0a0)</a>.]]></description><link>linux\starship-terminal.html</link><guid isPermaLink="false">Linux/Starship terminal.md</guid><pubDate>Tue, 06 Aug 2024 16:22:31 GMT</pubDate></item><item><title><![CDATA[Useful commands]]></title><description><![CDATA[ 
+ <br>
+<br>
+grep "test1\|test2 Or without regular expressions grep -E "test1|test2"
+
+<br>
+cat &lt;filename&gt; | uniq If there are two lines which are the same it will return only one otherwise it will print both
+
+]]></description><link>linux\useful-commands.html</link><guid isPermaLink="false">Linux/Useful commands.md</guid><pubDate>Fri, 30 Aug 2024 15:44:38 GMT</pubDate></item><item><title><![CDATA[Callouts]]></title><description><![CDATA[ 
+ <br>Note<br>Abstract, Summary, Tldr<br>Info, Todo<br>Tip, Hint, Important<br>Success, Check, Done<br>Question, Help, FAQ<br>Warning, Caution, Attention<br>Failure, Fail, Missing<br>Danger, Error<br>Bug<br>Example<br>Quote, Cite]]></description><link>obsidian\callouts.html</link><guid isPermaLink="false">Obsidian/Callouts.md</guid><pubDate>Mon, 02 Sep 2024 10:26:12 GMT</pubDate></item><item><title><![CDATA[venv]]></title><description><![CDATA[ 
+ <br>python3 -m venv venv_name
+
+source venv_name/bin/activate # Activate
+
+deactivate 
+
+which python
+/home/francesco/Webhook-auth/webhook/bin/python
+echo $VIRTUAL_ENV
+/home/francesco/Webhook-auth/webhook
+Copy]]></description><link>python\venv.html</link><guid isPermaLink="false">Python/venv.md</guid><pubDate>Wed, 04 Sep 2024 09:09:56 GMT</pubDate></item></channel></rss>
