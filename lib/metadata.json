@@ -1,6 +1,6 @@
 {
   "vaultName": "Devops",
-  "lastExport": 1726653735212,
+  "lastExport": 1726656123656,
   "pluginVersion": "1.8.01",
   "validBodyClasses": "publish css-settings-manager theme-dark show-inline-title show-ribbon",
   "useCustomHeadContent": false,
@@ -18,14 +18,6 @@
     "CKS/Cluster Setup and Hardening/Securing Kubernetes dashboard.md",
     "CKS/Cluster Setup and Hardening/Service Accounts.md",
     "CKS/Cluster Setup and Hardening/Verify platform binaries.md",
-    "CKS/Exam/Benjamin Muschko.md",
-    "CKS/Exam/CKS Exam.md",
-    "CKS/Exam/Killer-sh - CKS Scenarios.md",
-    "CKS/Exam/Killer-sh - CKS Simulator.md",
-    "CKS/Exam/Mock-ups & Challenges.md",
-    "CKS/Exam/Resources available during.md",
-    "CKS/Exam/ToDo.md",
-    "CKS/Exam/Training.md",
     "CKS/Minimise Microservice Vulnerabilities/Admission Controllers.md",
     "CKS/Minimise Microservice Vulnerabilities/Admission webhooks.md",
     "CKS/Minimise Microservice Vulnerabilities/Dynamic Admission Control.md",
@@ -94,7 +86,8 @@
     "lib/scripts/graph-data.js",
     "lib/styles/obsidian.css",
     "lib/styles/global-variable-styles.css",
-    "lib/styles/main-styles.css"
+    "lib/styles/main-styles.css",
+    "kubernetes/networking/kubernetes-cluster-network_1_.png"
   ],
   "mainDependencies": [
     "lib/scripts/graph-wasm.wasm",
@@ -198,54 +191,6 @@
       "modifiedTime": 1726653735212,
       "sourceSize": 751,
       "exportedPath": "cks/cluster-setup-and-hardening/verify-platform-binaries.html",
-      "dependencies": []
-    },
-    "CKS/Exam/Benjamin Muschko.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 104,
-      "exportedPath": "cks/exam/benjamin-muschko.html",
-      "dependencies": []
-    },
-    "CKS/Exam/CKS Exam.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 377,
-      "exportedPath": "cks/exam/cks-exam.html",
-      "dependencies": []
-    },
-    "CKS/Exam/Killer-sh - CKS Scenarios.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 3580,
-      "exportedPath": "cks/exam/killer-sh-cks-scenarios.html",
-      "dependencies": []
-    },
-    "CKS/Exam/Killer-sh - CKS Simulator.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 21,
-      "exportedPath": "cks/exam/killer-sh-cks-simulator.html",
-      "dependencies": []
-    },
-    "CKS/Exam/Mock-ups & Challenges.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 253,
-      "exportedPath": "cks/exam/mock-ups-&-challenges.html",
-      "dependencies": []
-    },
-    "CKS/Exam/Resources available during.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 420,
-      "exportedPath": "cks/exam/resources-available-during.html",
-      "dependencies": []
-    },
-    "CKS/Exam/ToDo.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 2592,
-      "exportedPath": "cks/exam/todo.html",
-      "dependencies": []
-    },
-    "CKS/Exam/Training.md": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 306,
-      "exportedPath": "cks/exam/training.html",
       "dependencies": []
     },
     "CKS/Minimise Microservice Vulnerabilities/Admission Controllers.md": {
@@ -497,175 +442,175 @@
       "dependencies": []
     },
     "lib/scripts/graph-wasm.wasm": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 23377,
       "exportedPath": "lib/scripts/graph-wasm.wasm",
       "dependencies": []
     },
     "lib/fonts/94f2f163d4b698242fef.otf": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 66800,
       "exportedPath": "lib/fonts/94f2f163d4b698242fef.otf",
       "dependencies": []
     },
     "lib/fonts/72505e6a122c6acd5471.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 104232,
       "exportedPath": "lib/fonts/72505e6a122c6acd5471.woff2",
       "dependencies": []
     },
     "lib/fonts/2d5198822ab091ce4305.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 104332,
       "exportedPath": "lib/fonts/2d5198822ab091ce4305.woff2",
       "dependencies": []
     },
     "lib/fonts/c8ba52b05a9ef10f4758.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 98868,
       "exportedPath": "lib/fonts/c8ba52b05a9ef10f4758.woff2",
       "dependencies": []
     },
     "lib/fonts/cb10ffd7684cd9836a05.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 106876,
       "exportedPath": "lib/fonts/cb10ffd7684cd9836a05.woff2",
       "dependencies": []
     },
     "lib/fonts/b5f0f109bc88052d4000.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 105804,
       "exportedPath": "lib/fonts/b5f0f109bc88052d4000.woff2",
       "dependencies": []
     },
     "lib/fonts/cbe0ae49c52c920fd563.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 106108,
       "exportedPath": "lib/fonts/cbe0ae49c52c920fd563.woff2",
       "dependencies": []
     },
     "lib/fonts/535a6cf662596b3bd6a6.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 111708,
       "exportedPath": "lib/fonts/535a6cf662596b3bd6a6.woff2",
       "dependencies": []
     },
     "lib/fonts/70cc7ff27245e82ad414.ttf": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 192740,
       "exportedPath": "lib/fonts/70cc7ff27245e82ad414.ttf",
       "dependencies": []
     },
     "lib/fonts/454577c22304619db035.ttf": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 161376,
       "exportedPath": "lib/fonts/454577c22304619db035.ttf",
       "dependencies": []
     },
     "lib/fonts/52ac8f3034507f1d9e53.ttf": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 191568,
       "exportedPath": "lib/fonts/52ac8f3034507f1d9e53.ttf",
       "dependencies": []
     },
     "lib/fonts/05b618077343fbbd92b7.ttf": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 155288,
       "exportedPath": "lib/fonts/05b618077343fbbd92b7.ttf",
       "dependencies": []
     },
     "lib/fonts/4bb6ac751d1c5478ff3a.woff2": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 7876,
       "exportedPath": "lib/fonts/4bb6ac751d1c5478ff3a.woff2",
       "dependencies": []
     },
     "lib/media/874d8b8e340f75575caa.svg": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 317,
       "exportedPath": "lib/media/874d8b8e340f75575caa.svg",
       "dependencies": []
     },
     "lib/media/3d6c1bdc4d87cde4de67.svg": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 279,
       "exportedPath": "lib/media/3d6c1bdc4d87cde4de67.svg",
       "dependencies": []
     },
     "lib/html/file-tree.html": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 30418,
+      "modifiedTime": 1726656123656,
+      "sourceSize": 27108,
       "exportedPath": "lib/html/file-tree.html",
       "dependencies": []
     },
     "lib/scripts/webpage.js": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 47290,
       "exportedPath": "lib/scripts/webpage.js",
       "dependencies": []
     },
     "lib/scripts/graph-view.js": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 15519,
       "exportedPath": "lib/scripts/graph-view.js",
       "dependencies": []
     },
     "lib/scripts/graph-wasm.js": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 14021,
       "exportedPath": "lib/scripts/graph-wasm.js",
       "dependencies": []
     },
     "lib/scripts/graph-render-worker.js": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 5179,
       "exportedPath": "lib/scripts/graph-render-worker.js",
       "dependencies": []
     },
     "lib/scripts/tinycolor.js": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 29832,
       "exportedPath": "lib/scripts/tinycolor.js",
       "dependencies": []
     },
     "lib/scripts/pixi.js": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 449509,
       "exportedPath": "lib/scripts/pixi.js",
       "dependencies": []
     },
     "lib/scripts/minisearch.js": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 29422,
       "exportedPath": "lib/scripts/minisearch.js",
       "dependencies": []
     },
     "lib/media/favicon.png": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 1105,
       "exportedPath": "lib/media/favicon.png",
       "dependencies": []
     },
     "lib/scripts/graph-data.js": {
-      "modifiedTime": 1726653735212,
-      "sourceSize": 5115,
+      "modifiedTime": 1726656123656,
+      "sourceSize": 4575,
       "exportedPath": "lib/scripts/graph-data.js",
       "dependencies": []
     },
     "lib/styles/obsidian.css": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 130471,
       "exportedPath": "lib/styles/obsidian.css",
       "dependencies": []
     },
     "lib/styles/global-variable-styles.css": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 236,
       "exportedPath": "lib/styles/global-variable-styles.css",
       "dependencies": []
     },
     "lib/styles/main-styles.css": {
-      "modifiedTime": 1726653735212,
+      "modifiedTime": 1726656123656,
       "sourceSize": 23130,
       "exportedPath": "lib/styles/main-styles.css",
       "dependencies": []

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Devops]]></title><description><![CDATA[Obsidian digital garden]]></description><link>http://github.com/dylang/node-rss</link><image><url>lib\media\favicon.png</url><title>Devops</title><link></link></image><generator>Webpage HTML Export plugin for Obsidian</generator><lastBuildDate>Wed, 18 Sep 2024 10:02:17 GMT</lastBuildDate><atom:link href="lib\rss.xml" rel="self" type="application/rss+xml"/><pubDate>Wed, 18 Sep 2024 10:02:15 GMT</pubDate><ttl>60</ttl><dc:creator></dc:creator><item><title><![CDATA[API Accessing REST]]></title><description><![CDATA[ 
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Devops]]></title><description><![CDATA[Obsidian digital garden]]></description><link>http://github.com/dylang/node-rss</link><image><url>lib\media\favicon.png</url><title>Devops</title><link/></image><generator>Webpage HTML Export plugin for Obsidian</generator><lastBuildDate>Wed, 18 Sep 2024 10:42:03 GMT</lastBuildDate><atom:link href="lib\rss.xml" rel="self" type="application/rss+xml"/><pubDate>Wed, 18 Sep 2024 10:42:03 GMT</pubDate><ttl>60</ttl><dc:creator/><item><title><![CDATA[API Accessing REST]]></title><description><![CDATA[ 
  <br><a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-api/" target="_blank">https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-api/</a><br>kubectl proxy&nbsp;- Opens proxy port to API server<br>Establish a proxy connection<br>
 kubectl proxy --port=8080 &amp;<br>Query directly the API<br>
 curl localhost:8001/version<br>curl localhost:8001/api/v1/namespaces/default/secrets | jq -j '.items[].data.password' | base64 -d<br>use /api - for core API groups, such as retrieving Pods, Nodes, etc. /apis for other API groups, such as apps, batch, extensions, etc.<br>curl localhost:8001/api/v1/namespaces/default/pods<br>
@@ -552,140 +552,7 @@ Copy<br>If different one has been manipulated<br>sha512sum  /usr/bin/kubelet
 
 sha512sum  kubernetes/server/bin/kubelet 
 c09618a8ed80dc57bb58fba16ce579a21db3d2625bf14af29e7a64fd09642761d8b6a007c334284a6abca191ac4e4b0f3064e3e11537a9995dd23342045236d5  kubernetes/server/bin/kubelet
-Copy]]></description><link>cks\cluster-setup-and-hardening\verify-platform-binaries.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Verify platform binaries.md</guid><pubDate>Fri, 26 Jul 2024 09:02:59 GMT</pubDate></item><item><title><![CDATA[Benjamin Muschko]]></title><description><![CDATA[ 
- <br>Certified Kubernetes Security Specialist (CKS) Crash Course<br>
-<a rel="noopener" class="external-link" href="https://github.com/bmuschko/cks-crash-course" target="_blank">https://github.com/bmuschko/cks-crash-course</a>]]></description><link>cks\exam\benjamin-muschko.html</link><guid isPermaLink="false">CKS/Exam/Benjamin Muschko.md</guid><pubDate>Mon, 19 Aug 2024 20:49:22 GMT</pubDate></item><item><title><![CDATA[CKS Exam]]></title><description><![CDATA[ 
- <br>Resources<br>
-<br><a data-href="Killer-sh - CKS Simulator" href="cks\exam\killer-sh-cks-simulator.html" class="internal-link" target="_self" rel="noopener">Killer-sh - CKS Simulator</a>
-<br><a data-href="Killer-sh - CKS Scenarios" href="cks\exam\killer-sh-cks-scenarios.html" class="internal-link" target="_self" rel="noopener">Killer-sh - CKS Scenarios</a>
-<br>In Exam resources available <a rel="noopener" class="external-link" href="https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed#certified-kubernetes-security-specialist-cks" target="_blank">https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed#certified-kubernetes-security-specialist-cks</a>
-<br>LXF<br>
-<br>Exam page <a rel="noopener" class="external-link" href="https://trainingportal.linuxfoundation.org/learn/course/certified-kubernetes-security-specialist-cks/exam/exam" target="_blank">https://trainingportal.linuxfoundation.org/learn/course/certified-kubernetes-security-specialist-cks/exam/exam</a>
-<br><a data-href="Training" href="cks\exam\training.html" class="internal-link" target="_self" rel="noopener">Training</a>]]></description><link>cks\exam\cks-exam.html</link><guid isPermaLink="false">CKS/Exam/CKS Exam.md</guid><pubDate>Wed, 07 Aug 2024 12:20:55 GMT</pubDate></item><item><title><![CDATA[Killercoda Scenarios]]></title><description><![CDATA[ 
- <br><a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/blob/master/Scenarios.md" target="_blank">https://github.com/killer-sh/cks-course-environment/blob/master/Scenarios.md</a><br><br>Many topics in the CKS course have interactive in-browser Killercoda scenarios at the end. Solve these to test and harden your knowledge!<br><br>
-<br>
-8 Cluster Hardening - Exercise caution in using ServiceAccounts<br>
-<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#serviceaccount-admission-controller" target="_blank">https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#serviceaccount-admission-controller</a><br>
-<a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/" target="_blank">https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/</a>
-
-<br>
-18 Runtime Security - Immutability of containers at runtime<br>
-emptyDir configuration example <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/concepts/storage/volumes/#emptydir" target="_blank">https://kubernetes.io/docs/concepts/storage/volumes/#emptydir</a><br>
-Configure a Security Context for a Pod or Container <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/configure-pod-container/security-context/" target="_blank">https://kubernetes.io/docs/tasks/configure-pod-container/security-context/</a>
-
-<br>
-19 <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#log-backend" target="_blank">https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/#log-backend</a>
-
-<br><br><a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/tree/master/cluster-setup/latest" target="_blank">https://github.com/killer-sh/cks-course-environment/tree/master/cluster-setup/latest</a><br>curl -s https://raw.githubusercontent.com/killer-sh/cks-course-environment/master/cluster-setup/latest/install_master.sh -o install_master.sh<br>curl -s https://raw.githubusercontent.com/killer-sh/cks-course-environment/master/cluster-setup/latest/install_worker.sh -o install_worker.sh<br>NIC setup for VBox linked clones<br>
-<a rel="noopener" class="external-link" href="https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/" target="_blank">https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/</a><br>/etc/netplan/01-netcfg.yaml
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    enp0s3:
-      dhcp4: no
-      addresses:
-        - 192.168.64.40/24
-      gateway4: 192.168.64.1
-      nameservers:
-        addresses:
-          - 192.168.64.1
-Copy]]></description><link>cks\exam\killer-sh-cks-scenarios.html</link><guid isPermaLink="false">CKS/Exam/Killer-sh - CKS Scenarios.md</guid><pubDate>Tue, 20 Aug 2024 15:51:37 GMT</pubDate></item><item><title><![CDATA[Killer-sh - CKS Simulator]]></title><description><![CDATA[ 
- <br><a rel="noopener" class="external-link" href="https://killer.sh/cks" target="_blank">https://killer.sh/cks</a>]]></description><link>cks\exam\killer-sh-cks-simulator.html</link><guid isPermaLink="false">CKS/Exam/Killer-sh - CKS Simulator.md</guid><pubDate>Fri, 05 Jul 2024 08:37:29 GMT</pubDate></item><item><title><![CDATA[Mock-ups & Challenges]]></title><description><![CDATA[ 
- <br>
-<br>Mock-ups <a rel="noopener" class="external-link" href="https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/08-Mock-Exams" target="_blank">https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/08-Mock-Exams</a>
-<br>Challenges <a rel="noopener" class="external-link" href="https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/09-cks-challenges" target="_blank">https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course/tree/main/docs/09-cks-challenges</a>
-]]></description><link>cks\exam\mock-ups-&amp;-challenges.html</link><guid isPermaLink="false">CKS/Exam/Mock-ups &amp; Challenges.md</guid><pubDate>Tue, 23 Jul 2024 18:30:30 GMT</pubDate></item><item><title><![CDATA[Resources available during]]></title><description><![CDATA[ 
- <br>
-<br>Kubernetes <a rel="noopener" class="external-link" href="https://kubernetes.io/docs/" target="_blank">https://kubernetes.io/docs/</a> <a rel="noopener" class="external-link" href="https://kubernetes.io/blog/" target="_blank">https://kubernetes.io/blog/</a>
-<br>Falco <a rel="noopener" class="external-link" href="https://falco.org/docs/" target="_blank">https://falco.org/docs/</a>
-<br>Trivy <a rel="noopener" class="external-link" href="https://aquasecurity.github.io/trivy/v0.54/" target="_blank">https://aquasecurity.github.io/trivy/v0.54/</a>
-<br>ETCD <a rel="noopener" class="external-link" href="https://etcd.io/docs/" target="_blank">https://etcd.io/docs/</a>
-<br>AppArmor <a rel="noopener" class="external-link" href="https://gitlab.com/apparmor/apparmor/-/wikis/Documentation" target="_blank">https://gitlab.com/apparmor/apparmor/-/wikis/Documentation</a>
-<br><br>
-<br>Tracee <a rel="noopener" class="external-link" href="https://aquasecurity.github.io/tracee/latest/" target="_blank">https://aquasecurity.github.io/tracee/latest/</a>
-<br>Kube-bench <a rel="noopener" class="external-link" href="https://aquasecurity.github.io/kube-bench/v0.6.15/" target="_blank">https://aquasecurity.github.io/kube-bench/v0.6.15/</a>
-<br>Kubesec <a rel="noopener" class="external-link" href="https://kubesec.io/" target="_blank">https://kubesec.io/</a>
-]]></description><link>cks\exam\resources-available-during.html</link><guid isPermaLink="false">CKS/Exam/Resources available during.md</guid><pubDate>Tue, 03 Sep 2024 09:58:17 GMT</pubDate></item><item><title><![CDATA[ToDo]]></title><description><![CDATA[ 
- <br>
-<br> Labs - View Certificates
-<br> Labs - Certificate API
-<br> Labs - Kubectl Proxy &amp; Port Forward
-<br>Labs - Cluster upgrade
-<br>Labs - Ingress - 1
-<br>Labs - Ingress - 2
-<br>Article: Ingress<br>
-<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/42cf821c-38ef-4cd5-abce-dfcaf0250c11" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/42cf821c-38ef-4cd5-abce-dfcaf0250c11</a><br>
-Article: Ingress - Annotations and rewrite-target<br>
-<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/416fc31d-8436-4fb2-be44-8d29bee19334" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/416fc31d-8436-4fb2-be44-8d29bee19334</a><br>Article: Securing Control Plane Communications with Ciphers<br>
-<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/3e7ad1e6-8aa3-476b-8e26-7c48659ae91e" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/eac6dac8-4481-4138-96ef-a2135f20e05e/lesson/3e7ad1e6-8aa3-476b-8e26-7c48659ae91e</a><br>
-<br>Lab - Identify open ports, remove packages services
-<br>Lab - UFW Firewall
-<br>Lab - Pod Security Admission.
-<br>Article: Understanding Pod Security Policy<br>
-<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/a3ca9b49-2589-4497-afb1-213b9c4dc47d" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/a3ca9b49-2589-4497-afb1-213b9c4dc47d</a><br>
-<br>Labs - OPA
-<br>Labs - OPA in Kubernetes
-<br>Lab - Manage Kubernetes secrets
-<br>Article - Note on Secrets<br>
-<a rel="noopener" class="external-link" href="https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/cb91290b-c3f5-41a5-af2f-ec2666bf6da6" target="_blank">https://learn.kodekloud.com/user/courses/certified-kubernetes-security-specialist-cks/module/7431dd03-f5c2-4ebb-b94a-2d35615bbd8c/lesson/cb91290b-c3f5-41a5-af2f-ec2666bf6da6</a><br>
-<br>Labs - Image Security
-<br>Labs - Ensure Immutability of Containers at Runtime
-<br><br>
-<br>
-Q2<br>
-falco rules<br>
-crictl ps -id 7a5ea6a080d1<br>
-crictl pods -id 7a864406b9794
-
-<br>
-Q5 more speed!
-
-<br>
-Q8<br>
-Where is documentation?
-
-<br>
-Q12<br>
-Documentation about curl kube-api
-
-<br>
-Q13<br>
-Try to recreate scenario and use ingress and egress instead
-
-<br>
-Q14<br>
-Syscall and strace
-
-<br>
-Q19<br>
-Immutable Root FS
-
-<br><br>practice EOF<br>practice jq<br><br>An automated analysis of your completed exam shows the three lowest scoring topics to be:<br>
-<a rel="noopener" class="external-link" href="https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/" target="_blank">https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/</a><br>
-<br>Supply Chain Security
-<br>Cluster Hardening
-<br>Minimize Microservice Vulnerabilities
-<br>Review<br>
-<br>NodeRestriction
-<br>ServiceAccount limiting
-<br>Audit rules
-<br>Falco rules
-<br>Sysdig
-<br>Dockerfiles best-practices
-<br>Secrets mount in pods
-<br>ImagePolicyWebhook
-<br>Restrict Communication (API-Server), Webhook as auth-mode
-<br>Restrict Communication from Kubelet to API-Server
-<br>Network Policies<br>
-<a rel="noopener" class="external-link" href="https://medium.com/@artem_lajko/cks-evolution-2021-2023-60699c879886" target="_blank">https://medium.com/@artem_lajko/cks-evolution-2021-2023-60699c879886</a>
-]]></description><link>cks\exam\todo.html</link><guid isPermaLink="false">CKS/Exam/ToDo.md</guid><pubDate>Wed, 04 Sep 2024 07:07:06 GMT</pubDate></item><item><title><![CDATA[Training]]></title><description><![CDATA[ 
- <br>Killer-sh<br>
-<br>CKS full course <a rel="noopener" class="external-link" href="https://youtu.be/d9xfB5qaOfg" target="_blank">https://youtu.be/d9xfB5qaOfg</a>
-<br>CKS course resources <a rel="noopener" class="external-link" href="https://github.com/killer-sh/cks-course-environment/blob/master/Resources.md" target="_blank">https://github.com/killer-sh/cks-course-environment/blob/master/Resources.md</a><br>
-Kodekloud
-<br>Certified Kubernetes Security Specialist (CKS) Course <a rel="noopener" class="external-link" href="https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course" target="_blank">https://github.com/kodekloudhub/certified-kubernetes-security-specialist-cks-course</a>
-]]></description><link>cks\exam\training.html</link><guid isPermaLink="false">CKS/Exam/Training.md</guid><pubDate>Tue, 02 Jul 2024 09:31:05 GMT</pubDate></item><item><title><![CDATA[Admission Controllers]]></title><description><![CDATA[ 
+Copy]]></description><link>cks\cluster-setup-and-hardening\verify-platform-binaries.html</link><guid isPermaLink="false">CKS/Cluster Setup and Hardening/Verify platform binaries.md</guid><pubDate>Fri, 26 Jul 2024 09:02:59 GMT</pubDate></item><item><title><![CDATA[Admission Controllers]]></title><description><![CDATA[ 
  <br>
 An&nbsp;admission controller&nbsp;is a piece of code that intercepts requests to the Kubernetes API server prior to persistence of the object, but after the request is authenticated and authorized. Admission controllers may be&nbsp;validating,&nbsp;mutating, or both. Mutating controllers may modify objects related to the requests they admit; validating controllers may not.
 <br>An example of admission controller is NamespaceAutoProvision<br>Need to be added to kube-apiserver config<br>spec:
@@ -1585,7 +1452,7 @@ networking:
       podSubnet: 10.244.0.0/16
       serviceSubnet: 10.96.0.0/12
 ...
-Copy]]></description><link>kubernetes\networking\cluster-networking.html</link><guid isPermaLink="false">Kubernetes/Networking/Cluster Networking.md</guid><pubDate>Sun, 07 Jul 2024 08:09:07 GMT</pubDate><enclosure url="kubernetes\networking\kubernetes-cluster-network_1_.png" length="0" type="image/png"/><content:encoded>&lt;figure&gt;&lt;img src=&quot;kubernetes\networking\kubernetes-cluster-network_1_.png&quot;&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[DNS]]></title><description><![CDATA[ 
+Copy]]></description><link>kubernetes\networking\cluster-networking.html</link><guid isPermaLink="false">Kubernetes/Networking/Cluster Networking.md</guid><pubDate>Sun, 07 Jul 2024 08:09:07 GMT</pubDate><enclosure url="kubernetes\networking\kubernetes-cluster-network_1_.png" length="0" type="image/png"/><content:encoded>&lt;figure&gt;&lt;img src="kubernetes\networking\kubernetes-cluster-network_1_.png"&gt;&lt;/figure&gt;</content:encoded></item><item><title><![CDATA[DNS]]></title><description><![CDATA[ 
  <br>in app namespace<br>
 The service<br>web-service.apps
 web-service.apps.svc
